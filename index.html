@@ -7,227 +7,144 @@
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
+        /* 保持你喜欢的粉色渐变背景 */
         background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 50%, #e8f0fe 100%);
-        overflow: hidden; /* 保持隐藏滚动条，让气泡浮在内部 */
+        overflow: hidden; /* 禁止滚动，让气泡在屏幕内堆积 */
         height: 100vh;
         width: 100vw;
         font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
         position: relative;
         -webkit-tap-highlight-color: transparent;
     }
-    .warn-tip {
+
+    /* 气泡的基础样式 */
+    .bubble {
         position: absolute;
-        padding: 10px 18px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 50px;
-        background: rgba(255, 255, 255, 0.85); /* 稍微加深背景以便看清文字 */
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.9);
-        box-shadow: 0 4px 20px rgba(255, 182, 193, 0.25);
-        font-size: 14px;
-        color: #5a4a5a;
+        background: rgba(255, 255, 255, 0.85); /* 半透明白底 */
+        padding: 12px 20px;
+        border-radius: 25px; /* 圆角 */
+        color: #5d4e6d; /* 深紫色字体 */
+        font-size: 15px;
         font-weight: 500;
-        opacity: 0;
+        box-shadow: 0 4px 15px rgba(255, 182, 193, 0.2); /* 淡淡的粉色阴影 */
+        white-space: nowrap; /* 不换行 */
+        opacity: 0; /* 初始不可见，为了做淡入效果 */
         transform: scale(0.8);
-        animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        pointer-events: none; /* 允许点击穿透 */
-        z-index: 10;
-        white-space: nowrap;
-        letter-spacing: 0.5px;
-        /* 移除了 fadeOut 动画，现在它们不会消失 */
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 弹性出现效果 */
+        z-index: 1;
+        backdrop-filter: blur(5px); /* 毛玻璃效果 */
+        border: 1px solid rgba(255, 255, 255, 0.6);
     }
-    @keyframes popIn {
-        0% { opacity: 0; transform: scale(0.5) translateY(10px); }
-        100% { opacity: 1; transform: scale(1) translateY(0); }
+
+    /* 出现时的状态 */
+    .bubble.show {
+        opacity: 1;
+        transform: scale(1);
     }
-    
-    #overlay {
-        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(255, 255, 255, 0.98);
-        z-index: 100;
+
+    /* 音乐按钮（保留原图右上角的装饰） */
+    .music-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        background: #fff;
+        border-radius: 50%;
         display: flex;
-        flex-direction: column;
-        justify-content: center;
         align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 100;
         cursor: pointer;
-        transition: opacity 0.8s ease, visibility 0.8s;
-    }
-    #overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-    
-    .gift-icon { font-size: 5rem; animation: bounce 2s infinite ease-in-out; margin-bottom: 24px; filter: drop-shadow(0 10px 15px rgba(255,107,107,0.3)); }
-    .open-text { font-size: 1.2rem; color: #666; letter-spacing: 3px; animation: textPulse 3s infinite; }
-    
-    @keyframes bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-15px) scale(1.05); } }
-    @keyframes textPulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
-
-    #music-btn {
-        position: fixed; top: 20px; right: 20px; z-index: 50;
-        width: 44px; height: 44px; border-radius: 50%;
-        background: rgba(255,255,255,0.7); backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.9);
-        font-size: 20px; display: none; align-items: center; justify-content: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    #music-btn:active { transform: scale(0.9); }
-    #music-btn.playing { animation: spin 4s linear infinite; background: rgba(255,255,255,0.9); }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-    .click-heart {
-        position: fixed; pointer-events: none; font-size: 24px; z-index: 99;
-        animation: heartFloat 1s ease-out forwards;
-    }
-    @keyframes heartFloat {
-        0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
-        50% { transform: translate(-50%, -100%) scale(1.2); }
-        100% { opacity: 0; transform: translate(-50%, -150%) scale(1); }
-    }
-
-    .confession {
-        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
-        z-index: 20; text-align: center; opacity: 0; pointer-events: none;
-        animation: confessionShow 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        text-shadow: 0 2px 10px rgba(255,182,193,0.4);
-        background: rgba(255,255,255,0.9); padding: 30px; border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-    .confession h1 { font-size: 2rem; color: #d63384; margin-bottom: 12px; letter-spacing: 2px; }
-    .confession p { font-size: 1.4rem; color: #e85d75; letter-spacing: 1px; }
-    @keyframes confessionShow {
-        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-        100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        font-size: 20px;
     }
 </style>
 </head>
 <body>
-    <div id="overlay">
-        <div class="gift-icon">🎁</div>
-        <div class="open-text">利利，点击打开你的专属惊喜</div>
-    </div>
 
-    <audio id="bgm" loop preload="auto">
-        <source src="YOUR_MUSIC_URL_HERE.mp3" type="audio/mpeg">
-    </audio>
-    <button id="music-btn">🎵</button>
+<!-- 右上角的音乐图标装饰 -->
+<div class="music-btn">🎵</div>
 
 <script>
-    const tips = [
-        "利利，我想你了 💕", "利利今天过得开心吗？🌸", "期待和利利见面 ✨",
-        "祝利利工作顺利呀 🍀", "利利要早点休息哦 🌙", "天冷了，利利多穿衣服 🧣",
-        "利利今天也要加油鸭 💪", "麦莉恩这首歌送给利利 🎶", "利利是最特别的存在 🌟",
-        "世界很大，我的眼里只有你 👀", "记得按时吃饭呀 🍱", "你是我的小确幸 🍬",
-        "爱你三千遍 ❤️", "想带你去吃好吃的 🍔", "想和你一起看海 🌊",
-        "你是最棒的 🏆", "每天都要笑口常开 😊", "不管发生什么我都在 🛡️"
+    const messages = [
+        "你是我的小确幸 🍬",
+        "世界很大，我的眼里只有你 👀",
+        "记得按时吃饭呀 🍱",
+        "利利，我想你了 💕",
+        "麦莉恩这首歌送给利利 🎶",
+        "利利是最特别的存在 🌟",
+        "今天也要开心哦 ☀️",
+        "想和你一起看星星 ✨",
+        "你是我最喜欢的宝贝 🧸",
+        "晚安，好梦 🌙",
+        "无论发生什么，我都在 🛡️",
+        "喜欢你笑的样子 😊"
+        "爱你三千遍 ❤️"
+        "不管发生什么我都在 🛡️"
+        "世界很大，我的眼里只有你 👀"
+        "期待和利利见面 ✨"
     ];
 
-    // 修改点1：移除了数量限制，现在可以无限生成
-    let isRunning = false;
-    let activeTips = []; // 依然保留数组以便管理（虽然不再删除）
-    let timer = null;
-    let confessionShown = false;
+    // 获取屏幕宽高
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
 
-    function showTip() {
-        if (!isRunning) return;
+    function createBubble() {
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
 
-        const tip = document.createElement('div');
-        tip.className = 'warn-tip';
-        tip.innerText = tips[Math.floor(Math.random() * tips.length)];
+        // 随机选取一句话
+        const text = messages[Math.floor(Math.random() * messages.length)];
+        bubble.innerText = text;
 
-        // 修改点2：优化位置算法，尽量铺满全屏
-        // 减去元素自身宽高的估算值，防止超出屏幕
-        const maxX = window.innerWidth - 120; 
-        const maxY = window.innerHeight - 50;
-        
-        tip.style.left = Math.max(10, Math.floor(Math.random() * maxX)) + 'px';
-        tip.style.top = Math.max(10, Math.floor(Math.random() * maxY)) + 'px';
+        // --- 核心逻辑：位置计算 ---
+        // 为了让它铺满且不重叠太严重，我们尽量随机分布
+        // 减去大概的气泡宽度(200)和高度(50)，防止溢出屏幕边缘
+        const randomX = Math.random() * (screenWidth - 150);
+        const randomY = Math.random() * (screenHeight - 100);
 
-        document.body.appendChild(tip);
-        activeTips.push(tip);
+        bubble.style.left = randomX + 'px';
+        bubble.style.top = randomY + 'px';
 
-        // 修改点3：移除了自动消失的 setTimeout 逻辑
-        // 气泡现在会一直存在，直到内存撑爆或者手动刷新
+        // 随机一点点大小变化，显得更自然
+        const scale = 0.9 + Math.random() * 0.2; // 0.9倍 到 1.1倍大小
+        // 注意：这里先不应用scale，等show类加上后再应用，配合CSS transition
+
+        document.body.appendChild(bubble);
+
+        // 强制重绘后添加 show 类，触发 CSS 里的弹跳动画
+        setTimeout(() => {
+            bubble.classList.add('show');
+            // 手动修正一下最终的大小，因为CSS里写死了scale(1)
+            // 如果想大小不一，可以在这里修改 style.transform
+            // bubble.style.transform = `scale(${scale})`;
+        }, 50);
+
+        // 关键点：这里没有任何代码去 remove(bubble)
+        // 所以它们会一直存在，直到页面被刷新或关闭。
+
+        // 检查气泡数量，如果太多（比如超过300个），为了防止手机卡死，
+        // 我们可以选择停止生成，或者移除最早的一个（可选）。
+        // 如果你想无限堆叠直到卡死，就把下面这几行删掉。
+        const allBubbles = document.querySelectorAll('.bubble');
+        if (allBubbles.length > 200) {
+           // 如果不想卡死手机，可以取消注释下面这行，它会移除最早的一个
+           // allBubbles[0].remove();
+           // 或者直接停止生成
+           // return;
+        }
     }
 
-    function showConfession() {
-        if (confessionShown) return;
-        confessionShown = true;
-        clearInterval(timer); // 停止生成新气泡，防止遮挡表白文字
-        
-        const confession = document.createElement('div');
-        confession.className = 'confession';
-        confession.innerHTML = '<h1>利利我喜欢你</h1><p>做我女朋友吧 💖</p>';
-        document.body.appendChild(confession);
+    // --- 疯狂生成模式 ---
+    // 每 400毫秒 生成一个 (数字越小越快)
+    setInterval(createBubble, 400);
+
+    // 初始化先生成几个，免得刚开始太空
+    for(let i=0; i<5; i++) {
+        setTimeout(createBubble, i * 200);
     }
 
-    const overlay = document.getElementById('overlay');
-    const bgm = document.getElementById('bgm');
-    const musicBtn = document.getElementById('music-btn');
-
-    overlay.addEventListener('click', () => {
-        overlay.classList.add('hidden');
-        isRunning = true;
-        musicBtn.style.display = 'flex';
-        
-        const playPromise = bgm.play();
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                musicBtn.classList.add('playing');
-            }).catch(e => {
-                console.warn('自动播放被拦截:', e);
-                musicBtn.innerText = '🔇';
-            });
-        }
-
-        // 修改点4：加快生成速度，更快铺满屏幕 (从600ms改为300ms)
-        timer = setInterval(showTip, 300); 
-        
-        // 延迟表白出现的时间，给气泡一点时间铺满 (从8s改为12s)
-        setTimeout(showConfession, 12000); 
-
-        const docEl = document.documentElement;
-        if (docEl.requestFullscreen) docEl.requestFullscreen().catch(()=>{});
-        else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
-    });
-
-    musicBtn.addEventListener('click', (e) => {
-        e.stopPropagation(); e.preventDefault();
-        if (bgm.paused) {
-            bgm.play();
-            musicBtn.classList.add('playing');
-            musicBtn.innerText = '🎵';
-        } else {
-            bgm.pause();
-            musicBtn.classList.remove('playing');
-            musicBtn.innerText = '🔇';
-        }
-    });
-
-    let lastTap = 0;
-    document.addEventListener('touchend', (e) => {
-        const currentTime = new Date().getTime();
-        const tapLength = currentTime - lastTap;
-        if (tapLength < 300 && tapLength > 0) {
-            createHeart(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-            e.preventDefault();
-        }
-        lastTap = currentTime;
-    });
-    document.addEventListener('dblclick', (e) => {
-        createHeart(e.clientX, e.clientY);
-    });
-
-    function createHeart(x, y) {
-        const heart = document.createElement('div');
-        heart.className = 'click-heart';
-        heart.innerText = ['❤️','💖','💗','💕'][Math.floor(Math.random()*4)];
-        heart.style.left = x + 'px';
-        heart.style.top = y + 'px';
-        document.body.appendChild(heart);
-        setTimeout(() => heart.remove(), 1000);
-    }
 </script>
 </body>
 </html>
