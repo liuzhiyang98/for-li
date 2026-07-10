@@ -5,140 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>💌 To 利利</title>
     <style>
-        /* 1. 基础设置：粉色背景，禁止滚动 */
+        /* 这里是样式表，负责长什么样 */
         body {
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 100%);
+            background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 100%); /* 粉色背景 */
             height: 100vh;
             width: 100vw;
-            overflow: hidden; /* 关键：防止出现滚动条 */
+            overflow: hidden; /* 禁止滚动 */
             font-family: "Microsoft YaHei", sans-serif;
             position: relative;
         }
 
-        /* 2. 右上角的音乐按钮样式 */
+        /* 音乐按钮样式 */
         .music-btn {
-            position: fixed;
+            position: absolute;
             top: 20px;
             right: 20px;
-            width: 45px;
-            height: 45px;
+            width: 40px;
+            height: 40px;
             background: white;
             border-radius: 50%;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 24px;
-            z-index: 9999; /* 保证它在最上层 */
+            font-size: 20px;
+            z-index: 100;
             cursor: pointer;
-            animation: spin 4s linear infinite; /* 简单的旋转动画 */
+            animation: spin 4s linear infinite; /* 旋转动画 */
         }
 
         @keyframes spin {
-            100% { transform: rotate(360deg); }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
-        /* 3. 气泡文字的样式 */
+        /* 气泡样式 */
         .bubble {
             position: absolute;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 10px 20px;
             border-radius: 20px;
             color: #555;
             font-size: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            white-space: nowrap; /* 不换行 */
-            opacity: 0; /* 初始透明 */
+            box-shadow: 0 4px 15px rgba(255, 182, 193, 0.3);
+            opacity: 0; /* 初始不可见 */
             transition: opacity 1s ease; /* 慢慢浮现 */
-            pointer-events: none; /* 让鼠标可以穿透点击 */
+            max-width: 80%;
+            word-wrap: break-word;
+            border: 1px solid rgba(255, 255, 255, 0.9);
         }
     </style>
 </head>
 <body>
 
     <!-- 音乐按钮 -->
-    <div class="music-btn" onclick="toggleMusic()">🎵</div>
+    <div class="music-btn" id="musicBtn">🎵</div>
     
-    <!-- 这里的src换成你真实的mp3链接，如果没有链接，按钮也会显示 -->
-    <audio id="bgm" loop>
+    <!-- 这里的 src 可以换成你喜欢的音乐链接 -->
+    <audio id="bgm" loop preload="auto">
         <source src="./mailien.mp3" type="audio/mpeg">
     </audio>
 
     <script>
-        // --- 配置区域 ---
-        const messages = [
-           <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>💌 To 利利</title>
-    <style>
-        /* 1. 基础设置：粉色背景，禁止滚动 */
-        body {
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 100%);
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden; /* 关键：防止出现滚动条 */
-            font-family: "Microsoft YaHei", sans-serif;
-            position: relative;
-        }
-
-        /* 2. 右上角的音乐按钮样式 */
-        .music-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 45px;
-            height: 45px;
-            background: white;
-            border-radius: 50%;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            z-index: 9999; /* 保证它在最上层 */
-            cursor: pointer;
-            animation: spin 4s linear infinite; /* 简单的旋转动画 */
-        }
-
-        @keyframes spin {
-            100% { transform: rotate(360deg); }
-        }
-
-        /* 3. 气泡文字的样式 */
-        .bubble {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px 18px;
-            border-radius: 20px;
-            color: #555;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            white-space: nowrap; /* 不换行 */
-            opacity: 0; /* 初始透明 */
-            transition: opacity 1s ease; /* 慢慢浮现 */
-            pointer-events: none; /* 让鼠标可以穿透点击 */
-        }
-    </style>
-</head>
-<body>
-
-    <!-- 音乐按钮 -->
-    <div class="music-btn" onclick="toggleMusic()">🎵</div>
-    
-    <!-- 这里的src换成你真实的mp3链接，如果没有链接，按钮也会显示 -->
-    <audio id="bgm" loop>
-        <source src="https://music.163.com/song/media/outer/url?id=1824045033.mp3" type="audio/mpeg">
-    </audio>
-
-    <script>
-        // --- 配置区域 ---
+        // --- 核心逻辑区域 ---
+        
+        // 1. 你想说的话（可以在这里添加更多）
         const messages = [
             "你是我的小确幸 🍬",
             "世界很大，我的眼里只有你 👀",
@@ -146,17 +79,11 @@
             "利利，我想你了 💕",
             "麦莉恩这首歌送给利利 🎶",
             "利利是最特别的存在 ✨",
-            "每天都要开心哦 😊",
-            "想和你一起看星星 🌟",
-            "你是我的首选 🏆",
-            "爱你一万年 ❤️"
+            "每天都要开心哦 🌞",
+            "想和你一起看星星 🌟"
         ];
 
-        const colors = ["#ff9a9e", "#fad0c4", "#a18cd1", "#fbc2eb"]; // 随机边框色
-        
-        // --- 核心逻辑 ---
-        
-        // 1. 生成气泡的函数
+        // 生成气泡的函数
         function createBubble() {
             const bubble = document.createElement('div');
             bubble.className = 'bubble';
@@ -164,23 +91,23 @@
             // 随机选一句话
             const text = messages[Math.floor(Math.random() * messages.length)];
             bubble.innerText = text;
-
-            // 随机位置 (0% - 90%)
-            const x = Math.random() * 90; 
-            const y = Math.random() * 90; 
             
+            // 随机位置 (0% - 90%)
+            const x = Math.random() * 90;
+            const y = Math.random() * 90;
             bubble.style.left = x + '%';
             bubble.style.top = y + '%';
             
             // 随机大小 (稍微有点变化)
             const scale = 0.8 + Math.random() * 0.4;
             bubble.style.transform = `scale(${scale})`;
-
+            
             // 随机边框颜色
+            const colors = ["#ff9a9e", "#fad0c4", "#a18cd1", "#fbc2eb"];
             bubble.style.border = `1px solid ${colors[Math.floor(Math.random() * colors.length)]}`;
 
             document.body.appendChild(bubble);
-
+            
             // 让它慢慢显示出来
             setTimeout(() => {
                 bubble.style.opacity = '1';
@@ -193,7 +120,7 @@
         // 3. 音乐控制逻辑
         let isPlaying = false;
         const audio = document.getElementById('bgm');
-        const btn = document.querySelector('.music-btn');
+        const btn = document.getElementById('musicBtn');
 
         function toggleMusic() {
             if (isPlaying) {
@@ -203,81 +130,20 @@
             } else {
                 audio.play().catch(e => alert("请点击屏幕交互后才能播放音乐哦"));
                 btn.style.animationPlayState = 'running'; // 开始旋转
-                btn.innerHTML = '🎵'; // 变音符图标
+                btn.innerHTML = '🎵'; // 变音乐图标
             }
             isPlaying = !isPlaying;
         }
 
-        // 初始化先生成几个，避免刚开始太空
-        createBubble();
-        createBubble();
-        createBubble();
-
-    </script>
-</body>
-</html>
-        ];
-
-        const colors = ["#ff9a9e", "#fad0c4", "#a18cd1", "#fbc2eb"]; // 随机边框色
+        // 点击按钮切换音乐
+        btn.addEventListener('click', toggleMusic);
         
-        // --- 核心逻辑 ---
-        
-        // 1. 生成气泡的函数
-        function createBubble() {
-            const bubble = document.createElement('div');
-            bubble.className = 'bubble';
-            
-            // 随机选一句话
-            const text = messages[Math.floor(Math.random() * messages.length)];
-            bubble.innerText = text;
-
-            // 随机位置 (0% - 90%)
-            const x = Math.random() * 90; 
-            const y = Math.random() * 90; 
-            
-            bubble.style.left = x + '%';
-            bubble.style.top = y + '%';
-            
-            // 随机大小 (稍微有点变化)
-            const scale = 0.8 + Math.random() * 0.4;
-            bubble.style.transform = `scale(${scale})`;
-
-            // 随机边框颜色
-            bubble.style.border = `1px solid ${colors[Math.floor(Math.random() * colors.length)]}`;
-
-            document.body.appendChild(bubble);
-
-            // 让它慢慢显示出来
-            setTimeout(() => {
-                bubble.style.opacity = '1';
-            }, 100);
-        }
-
-        // 2. 启动循环：每 800 毫秒生成一个，铺满屏幕
-        setInterval(createBubble, 800);
-
-        // 3. 音乐控制逻辑
-        let isPlaying = false;
-        const audio = document.getElementById('bgm');
-        const btn = document.querySelector('.music-btn');
-
-        function toggleMusic() {
-            if (isPlaying) {
-                audio.pause();
-                btn.style.animationPlayState = 'paused'; // 停止旋转
-                btn.innerHTML = '🔇'; // 变静音图标
-            } else {
-                audio.play().catch(e => alert("请点击屏幕交互后才能播放音乐哦"));
-                btn.style.animationPlayState = 'running'; // 开始旋转
-                btn.innerHTML = '🎵'; // 变音符图标
+        // 也可以点击屏幕任意位置尝试播放（解决浏览器自动播放限制）
+        document.body.addEventListener('click', function() {
+            if (!isPlaying) {
+                toggleMusic();
             }
-            isPlaying = !isPlaying;
-        }
-
-        // 初始化先生成几个，避免刚开始太空
-        createBubble();
-        createBubble();
-        createBubble();
+        });
 
     </script>
 </body>
