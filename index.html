@@ -17,7 +17,7 @@
         }
         body.night-mode { background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e); }
 
-        /* --- 启动按钮 (绝对居中) --- */
+        /* --- 启动按钮 --- */
         #start-btn {
             position: absolute; inset: 0; margin: auto;
             width: fit-content; height: fit-content;
@@ -39,32 +39,88 @@
             50% { box-shadow: 0 0 0 15px rgba(214,51,108,0), 0 10px 30px rgba(214,51,108,0.3); }
         }
 
-        /* --- 全屏气泡容器 --- */
+        /* --- 全屏气泡容器 (适配安全区) --- */
         .bubble-wall {
-            position: absolute; inset: 0;
-            pointer-events: none; z-index: 10;
+            position: absolute;
+            top: env(safe-area-inset-top, 20px);
+            left: env(safe-area-inset-left, 10px);
+            right: env(safe-area-inset-right, 10px);
+            bottom: env(safe-area-inset-bottom, 20px);
+            pointer-events: none;
             overflow: hidden;
             transition: opacity 1s ease;
         }
-        /* 烟花阶段气泡变淡，让出视觉焦点 */
-        .bubble-wall.dimmed { opacity: 0.15; }
+        .bubble-wall.dimmed { opacity: 0.12; }
 
-        /* --- 气泡样式 (全屏随机分布) --- */
+        /* --- 气泡基础样式 --- */
         .bubble {
             position: absolute;
             padding: 10px 16px;
             border-radius: 20px;
             font-size: 14px; line-height: 1.5;
-            color: #fff;
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            box-shadow: 0 2px 10px rgba(255,154,158,0.3);
-            max-width: 70%; word-wrap: break-word;
-            opacity: 0; transform: scale(0.8);
-            animation: fadeInPop 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;
-            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            max-width: 65%; 
+            word-wrap: break-word;
+            opacity: 0;
+            will-change: transform, opacity;
         }
-        @keyframes fadeInPop { to { opacity: 1; transform: scale(1); } }
+
+        /* === 4种视觉样式 === */
+        .style-gradient {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            box-shadow: 0 3px 12px rgba(255,154,158,0.3);
+        }
+        .style-glass {
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            color: #d6336c; border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+        }
+        .style-outline {
+            background: rgba(255,255,255,0.3);
+            border: 1.5px solid #ff9a9e; color: #d6336c;
+            box-shadow: 0 3px 12px rgba(255,154,158,0.15);
+        }
+        .style-solid {
+            background: #ff6b81; color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+            box-shadow: 0 3px 12px rgba(255,107,129,0.35);
+        }
+
+        /* === 6种入场动画 === */
+        @keyframes anim-pop { 
+            from { opacity:0; transform:scale(0.3); } 
+            to { opacity:1; transform:scale(1); } 
+        }
+        @keyframes anim-slideUp { 
+            from { opacity:0; transform:translateY(30px) scale(0.9); } 
+            to { opacity:1; transform:translateY(0) scale(1); } 
+        }
+        @keyframes anim-slideLeft { 
+            from { opacity:0; transform:translateX(30px) scale(0.9); } 
+            to { opacity:1; transform:translateX(0) scale(1); } 
+        }
+        @keyframes anim-spin { 
+            from { opacity:0; transform:rotate(-15deg) scale(0.7); } 
+            to { opacity:1; transform:rotate(0deg) scale(1); } 
+        }
+        @keyframes anim-bounce { 
+            0% { opacity:0; transform:scale(0.3); }
+            50% { opacity:1; transform:scale(1.08); }
+            70% { transform:scale(0.95); }
+            100% { opacity:1; transform:scale(1); }
+        }
+        @keyframes anim-fade { 
+            from { opacity:0; transform:scale(0.95); } 
+            to { opacity:1; transform:scale(1); } 
+        }
+
+        .anim-pop { animation: anim-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        .anim-slideUp { animation: anim-slideUp 0.5s ease-out forwards; }
+        .anim-slideLeft { animation: anim-slideLeft 0.5s ease-out forwards; }
+        .anim-spin { animation: anim-spin 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        .anim-bounce { animation: anim-bounce 0.6s ease forwards; }
+        .anim-fade { animation: anim-fade 0.7s ease forwards; }
 
         /* 消失动画 */
         .bubble.vanish {
@@ -75,7 +131,7 @@
         /* --- 烟花画布 --- */
         #fireworks-canvas {
             position: absolute; inset: 0;
-            z-index: 20; pointer-events: none;
+            z-index: 9999; pointer-events: none;
             opacity: 0; transition: opacity 1.2s ease;
         }
     </style>
@@ -85,14 +141,13 @@
     <div class="bubble-wall" id="bubble-wall"></div>
     <canvas id="fireworks-canvas"></canvas>
     <!-- ⚠️ 请替换为你的真实 MP3 链接 -->
-    <audio id="bgm" loop preload="auto">
+   <audio id="bgm" loop preload="auto">
         <source src="./mailien.mp3" type="audio/mpeg">
     </audio>
 
 <script>
 // ==================== 300句关心鼓励与爱意 ====================
 const LOVE_WORDS = [
-    // --- 日常关心篇 ---
     "利利今天也要开心哦😊","记得按时吃饭呀🍱","多喝水照顾好自己💧",
     "早点休息别熬夜🌙","天冷了多穿点🧣","出门记得带伞☂️",
     "累了就歇一歇🫂","别给自己太大压力💆","心情不好就跟我说💬",
@@ -102,19 +157,15 @@ const LOVE_WORDS = [
     "不开心了就吃点甜的🍰","深呼吸放松一下🌬️","你值得被温柔以待🌸",
     "今天的你也很棒👏","允许自己偶尔偷懒😴","别太逞强了🥺",
     "你的健康最重要💪","记得晒太阳补充能量☀️","保持好心情很重要🌈",
-
-    // --- 鼓励支持篇 ---
-    "我相信你可以的💪","你已经做得很好了🏆","别怕，有我在🛡️",
+    "我相信你可以的💪","你已经做得很好了🏆","别怕有我在🛡️",
     "每一步都算数👣","失败只是暂时的🔄","你的努力我都看到了👀",
     "你是最勇敢的🦁","困难总会过去的🌅","你的潜力无限大🚀",
     "为自己骄傲吧🎉","你比想象中更强大💎","坚持下去就有希望🌟",
     "你的选择是对的✅","不要怀疑自己🙅","你值得所有美好🌺",
-    "慢慢来，不着急⏳","进步需要时间🌱","你的光芒挡不住✨",
+    "慢慢来不着急⏳","进步需要时间🌱","你的光芒挡不住✨",
     "每一次尝试都有意义🎯","你是独一无二的🌟","世界因你而不同🌍",
     "你的善良很珍贵💝","你的坚持让人敬佩🙇","未来可期🔮",
-    "你正在成为更好的自己📈","相信自己，你能行💯","你的梦想值得追求🌠",
-
-    // --- 深情爱意篇 ---
+    "你正在成为更好的自己📈","相信自己你能行💯","你的梦想值得追求🌠",
     "爱你三千遍🏹","你是我的一切🌍","心里满满都是你💗",
     "遇见你真好🥰","你是我的唯一💍","想和你共度余生💑",
     "你是我生命中的光💡","爱你到永远♾️","你是我的宝贝👶",
@@ -176,21 +227,25 @@ const LOVE_WORDS = [
 
 // ==================== 配置区 ====================
 const CONFIG = {
-    bubbleDuration: 240,   // 气泡阶段(秒)
-    fireworkDuration: 48,  // 烟花时长(秒)
-    pauseDuration: 10,     // 暂停时长(秒)
-    spawnRate: 700,        // 气泡生成间隔(ms)
-    maxBubbles: 60         // 屏幕最大气泡数(防遮挡烟花)
+    bubbleDuration: 240,
+    fireworkDuration: 48,
+    pauseDuration: 10,
+    spawnRate: 700,
+    maxBubbles: 55 // 略减数量，保证每个气泡有足够展示空间
 };
 
 // ==================== 全局状态 ====================
 let shuffledWords = [];
 let wordIndex = 0;
+let zIndexCounter = 1; // ✅ Z-Index 递增计数器
 let isRunning = false;
 let startTime = 0;
 let rafId = null;
 let bubbleTimer = null;
-let musicEnded = false; // 标记音乐是否在烟花结束时已暂停
+let musicEnded = false;
+
+const STYLES = ['style-gradient', 'style-glass', 'style-outline', 'style-solid'];
+const ANIMS = ['anim-pop', 'anim-slideUp', 'anim-slideLeft', 'anim-spin', 'anim-bounce', 'anim-fade'];
 
 // DOM
 const startBtn = document.getElementById('start-btn');
@@ -199,7 +254,7 @@ const bubbleWall = document.getElementById('bubble-wall');
 const canvas = document.getElementById('fireworks-canvas');
 const ctx = canvas.getContext('2d');
 
-// ==================== Fisher-Yates 洗牌 ====================
+// ==================== 工具函数 ====================
 function shuffle(arr) {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -209,6 +264,8 @@ function shuffle(arr) {
     return a;
 }
 
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
 function getNextWord() {
     if (wordIndex >= shuffledWords.length) {
         shuffledWords = shuffle(LOVE_WORDS);
@@ -217,31 +274,23 @@ function getNextWord() {
     return shuffledWords[wordIndex++];
 }
 
-// ==================== 全屏气泡系统 ====================
+// ==================== 多模态气泡系统 ====================
 function createBubble() {
     if (!isRunning) return;
+    if (bubbleWall.children.length >= CONFIG.maxBubbles) return;
 
-    const currentCount = bubbleWall.children.length;
-    
-    // 达到上限后不再新增，但保持现有气泡
-    if (currentCount < CONFIG.maxBubbles) {
-        const b = document.createElement('div');
-        b.className = 'bubble';
-        b.innerText = getNextWord();
+    const b = document.createElement('div');
+    b.className = `bubble ${pick(STYLES)} ${pick(ANIMS)}`;
+    b.innerText = getNextWord();
 
-        // 随机位置（避开边缘）
-        const top = 5 + Math.random() * 85;
-        const left = 5 + Math.random() * 85;
-        b.style.top = top + '%';
-        b.style.left = left + '%';
+    // ✅ Z-Index 严格递增，新气泡永远盖住旧的
+    b.style.zIndex = zIndexCounter++;
 
-        // 随机大小变化增加层次感
-        const scale = 0.8 + Math.random() * 0.4;
-        b.style.fontSize = (14 * scale) + 'px';
-        b.style.zIndex = Math.floor(Math.random() * 10);
+    // 随机位置（百分比定位，适配所有屏幕）
+    b.style.top = (3 + Math.random() * 88) + '%';
+    b.style.left = (3 + Math.random() * 88) + '%';
 
-        bubbleWall.appendChild(b);
-    }
+    bubbleWall.appendChild(b);
 
     const next = CONFIG.spawnRate + (Math.random() * 300 - 150);
     bubbleTimer = setTimeout(createBubble, next);
@@ -250,8 +299,11 @@ function createBubble() {
 function clearBubbles() {
     clearTimeout(bubbleTimer);
     const bs = bubbleWall.querySelectorAll('.bubble');
-    bs.forEach((b, i) => setTimeout(() => b.classList.add('vanish'), i * 30));
-    setTimeout(() => { bubbleWall.innerHTML = ''; }, 1500);
+    bs.forEach((b, i) => setTimeout(() => b.classList.add('vanish'), i * 25));
+    setTimeout(() => { 
+        bubbleWall.innerHTML = ''; 
+        zIndexCounter = 1; // 重置层级
+    }, 1500);
 }
 
 // ==================== 烟花引擎 ====================
@@ -306,14 +358,9 @@ function animateFireworks() {
     if (!fireworksActive && particles.length === 0) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.globalCompositeOperation = 'lighter';
-
     if (fireworksActive && Math.random() < 0.08) {
-        explode(
-            Math.random() * canvas.width,
-            Math.random() * canvas.height * 0.5 + canvas.height * 0.1
-        );
+        explode(Math.random() * canvas.width, Math.random() * canvas.height * 0.5 + canvas.height * 0.1);
     }
-
     for (let i = particles.length - 1; i >= 0; i--) {
         particles[i].update();
         particles[i].draw(ctx);
@@ -327,28 +374,20 @@ function tick() {
     if (!isRunning) return;
     const elapsed = (Date.now() - startTime) / 1000;
 
-    // ✅ 阶段1→2：气泡结束，烟花开始，音乐继续播放
     if (elapsed >= CONFIG.bubbleDuration && !fireworksActive && particles.length === 0) {
         clearBubbles();
         bubbleWall.classList.add('dimmed');
         document.body.classList.add('night-mode');
         canvas.style.opacity = '1';
         fireworksActive = true;
-        musicEnded = false; // 重置标记
+        musicEnded = false;
         animateFireworks();
     }
 
-    // ✅ 阶段2→3：烟花结束，音乐暂停（只执行一次）
     if (elapsed >= CONFIG.bubbleDuration + CONFIG.fireworkDuration && fireworksActive) {
         fireworksActive = false;
         cancelAnimationFrame(rafId);
-        
-        // 立即暂停音乐
-        if (!musicEnded) {
-            bgm.pause();
-            musicEnded = true;
-        }
-
+        if (!musicEnded) { bgm.pause(); musicEnded = true; }
         setTimeout(() => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particles = [];
@@ -358,11 +397,11 @@ function tick() {
         }, 1500);
     }
 
-    // ✅ 阶段3→新一轮：暂停10秒后重播
     if (elapsed >= CONFIG.bubbleDuration + CONFIG.fireworkDuration + CONFIG.pauseDuration + 1.5) {
         startTime = Date.now();
         shuffledWords = shuffle(LOVE_WORDS);
         wordIndex = 0;
+        zIndexCounter = 1;
         musicEnded = false;
         bgm.currentTime = 0;
         bgm.play().catch(() => {});
@@ -378,13 +417,13 @@ startBtn.addEventListener('click', () => {
     startBtn.style.pointerEvents = 'none';
     setTimeout(() => startBtn.style.display = 'none', 300);
 
-    // ✅ 点击即播放，loop=true 保证循环
     bgm.loop = true;
     bgm.volume = 0.6;
     bgm.play().catch(e => console.log('Safari autoplay blocked:', e));
 
     shuffledWords = shuffle(LOVE_WORDS);
     wordIndex = 0;
+    zIndexCounter = 1;
     isRunning = true;
     startTime = Date.now();
     createBubble();
