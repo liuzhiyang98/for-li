@@ -2,64 +2,72 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>💌 To 利利</title>
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
-            margin: 0; padding: 0;
             background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 100%);
             height: 100vh; width: 100vw;
             overflow: hidden;
             font-family: "Microsoft YaHei", sans-serif;
             position: relative;
-            user-select: none;
+            user-select: none; -webkit-user-select: none;
             touch-action: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- 开场遮罩层 --- */
+        /* --- 开场遮罩层 (最高优先级) --- */
         #start-screen {
             position: fixed; inset: 0;
             background: rgba(255, 240, 243, 0.98);
             z-index: 9999;
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
-            transition: opacity 0.8s ease;
+            transition: opacity 0.8s ease, visibility 0.8s;
         }
+        #start-screen.hidden {
+            opacity: 0; visibility: hidden; pointer-events: none;
+        }
+
         .start-title {
             font-size: 24px; color: #d66d7e;
             margin-bottom: 30px; font-weight: bold;
             text-align: center; padding: 0 20px;
+            line-height: 1.5;
         }
+
         .start-btn {
-            padding: 15px 40px;
+            padding: 16px 44px;
             background: linear-gradient(45deg, #ff9a9e, #fad0c4);
             color: white; border: none; border-radius: 50px;
-            font-size: 18px; cursor: pointer;
+            font-size: 18px; font-weight: bold;
+            cursor: pointer;
             box-shadow: 0 4px 15px rgba(255,154,158,0.4);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         .start-btn:active { transform: scale(0.95); }
 
-        /* --- 气泡样式 (关键：不消失+铺满) --- */
+        /* --- 气泡样式 --- */
+        #bubble-container {
+            position: absolute; inset: 0;
+            z-index: 5; pointer-events: none;
+        }
         .bubble {
             position: absolute;
             background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(2px);
+            backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
             border-radius: 20px;
             padding: 8px 16px;
-            color: #d66d7e;
-            font-size: 14px;
+            color: #d66d7e; font-size: 14px;
             white-space: nowrap;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            opacity: 0;
-            transform: translateY(20px) scale(0.8);
+            opacity: 0; transform: translateY(20px) scale(0.8);
             transition: opacity 1s ease, transform 1s ease;
-            pointer-events: none; /* 不阻挡点击 */
-            z-index: 5;
         }
-        .bubble.show {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
+        .bubble.show { opacity: 1; transform: translateY(0) scale(1); }
 
         /* --- 烟花画布 --- */
         #fireworks-canvas {
@@ -71,13 +79,16 @@
         .music-btn {
             position: absolute; top: 20px; right: 20px;
             width: 36px; height: 36px;
-            z-index: 100; opacity: 0;
-            pointer-events: none;
+            z-index: 100; opacity: 0; pointer-events: none;
             transition: opacity 0.5s;
             cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
         .music-btn.active { opacity: 0.8; pointer-events: auto; }
-        .music-btn svg { fill: #d66d7e; animation: spin 3s linear infinite paused; }
+        .music-btn svg { 
+            fill: #d66d7e; width: 100%; height: 100%;
+            animation: spin 3s linear infinite paused; 
+        }
         .music-btn.playing svg { animation-play-state: running; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
@@ -103,7 +114,6 @@
     <audio id="bgm" loop preload="auto">
         <source src="./mailien.mp3" type="audio/mpeg">
     </audio>
-
 <script>
     // ================= 配置区 =================
     const messages = [
@@ -119,7 +129,7 @@
         "无论发生什么，我都在 🛡",
         "喜欢你笑的样子 😊"，
         "爱你三千遍 ❤"，
-        "期待和利利见面 ✨"，
+        "期待和利利见面 ✨"
     ];
     // =========================================
 
@@ -128,70 +138,90 @@
     const musicBtn = document.getElementById('musicBtn');
     const bgm = document.getElementById('bgm');
     let isPlaying = false;
+    let hasStarted = false; // 防止重复触发
 
-    // 1. 启动流程
-    document.getElementById('startBtn').addEventListener('click', () => {
-        startScreen.style.opacity = '0';
-        setTimeout(() => startScreen.style.display = 'none', 800);
+    // ✅ 核心修复：界面切换与音频播放完全解耦
+    function startJourney() {
+        if (hasStarted) return;
+        hasStarted = true;
 
+        // 1. 立即切换界面（不依赖音频状态）
+        startScreen.classList.add('hidden');
         musicBtn.classList.add('active');
-        bgm.play().then(() => {
-            isPlaying = true;
-            musicBtn.classList.add('playing');
-        }).catch(() => {});
 
+        // 2. 尝试播放音乐（失败也不影响任何功能）
+        try {
+            bgm.play().then(() => {
+                isPlaying = true;
+                musicBtn.classList.add('playing');
+            }).catch(() => {
+                console.log('移动端自动播放被拦截，需手动点击音乐图标');
+            });
+        } catch(e) { /* 静默处理所有异常 */ }
+
+        // 3. 启动气泡
         startBubbles();
-        setTimeout(startFireworksShow, 4 * 60 * 1000); // 4分钟后烟花
+
+        // 4. 4分钟后启动烟花
+        setTimeout(startFireworksShow, 4 * 60 * 1000);
+    }
+
+    // ✅ 双重事件绑定，兼容所有移动端浏览器
+    const startBtn = document.getElementById('startBtn');
+    startBtn.addEventListener('click', startJourney);
+    startBtn.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        startJourney();
     });
 
-    // 音乐切换
-    musicBtn.addEventListener('click', () => {
+    // 音乐按钮控制
+    function toggleMusic() {
         if (isPlaying) {
             bgm.pause();
             musicBtn.classList.remove('playing');
         } else {
-            bgm.play();
+            bgm.play().catch(() => {});
             musicBtn.classList.add('playing');
         }
         isPlaying = !isPlaying;
+    }
+    musicBtn.addEventListener('click', toggleMusic);
+    musicBtn.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        toggleMusic();
     });
 
-    // 2. 气泡生成（铺满不消失）
+    // 气泡生成（铺满不消失 + 移动端性能保护）
     function startBubbles() {
-        // 初始快速生成一批铺底
-        for (let i = 0; i < 15; i++) {
-            setTimeout(() => createBubble(true), i * 100);
+        for (let i = 0; i < 12; i++) {
+            setTimeout(() => createBubble(), i * 120);
         }
-        // 之后持续缓慢补充
-        setInterval(() => createBubble(false), 1200);
+        setInterval(createBubble, 1500);
     }
 
-    function createBubble(isInitial) {
+    function createBubble() {
         const b = document.createElement('div');
         b.className = 'bubble';
         b.innerText = messages[Math.floor(Math.random() * messages.length)];
 
-        // 智能随机位置：避免过度重叠
-        const x = Math.random() * 85 + 5;  // 5% ~ 90%
-        const y = Math.random() * 85 + 5;  // 5% ~ 90%
+        const x = Math.random() * 85 + 5;
+        const y = Math.random() * 85 + 5;
         b.style.left = x + '%';
         b.style.top = y + '%';
 
-        // 随机边框色
         const colors = ['#ff9a9e','#fad0c4','#a18cd1','#fbc2eb','#8fd3f4'];
         b.style.border = `1px solid ${colors[Math.floor(Math.random()*colors.length)]}`;
 
         container.appendChild(b);
         requestAnimationFrame(() => b.classList.add('show'));
 
-        // ⚠️ 关键：不移除元素，让它一直留在屏幕上
-        // 但为了防止内存溢出，当数量超过80个时移除最早的
-        if (container.children.length > 80) {
+        // ✅ 移动端内存保护：上限50个
+        while (container.children.length > 50) {
             container.removeChild(container.firstElementChild);
         }
     }
 
-    // 3. 烟花引擎
+    // 烟花引擎
     function startFireworksShow() {
         const canvas = document.getElementById('fireworks-canvas');
         const ctx = canvas.getContext('2d');
@@ -213,7 +243,7 @@
             }
             update() {
                 this.x += this.vx; this.y += this.vy;
-                this.vy += 0.04; // 重力
+                this.vy += 0.04;
                 this.alpha -= this.decay;
             }
             draw() {
@@ -247,7 +277,7 @@
         }
 
         loop();
-        setTimeout(() => { active = false; }, 48000); // 48秒后停止
+        setTimeout(() => { active = false; }, 48000);
     }
 
     window.addEventListener('resize', () => {
