@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>💌 To 利利</title>
     <style>
-        /* --- 核心基础设置 --- */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        /* --- 基础重置与字体 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
         body {
             background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 100%);
@@ -14,142 +14,140 @@
             overflow: hidden; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             position: relative;
-            transition: background 1s ease; /* 背景平滑变暗 */
+            touch-action: none; /* 禁止浏览器默认的手势操作，防止误触 */
         }
 
-        /* 夜间模式类（烟花触发时添加） */
-        body.night-mode {
-            background: #0f0c29; 
-            background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
-        }
-
-        /* --- 交互按钮区域 --- */
-        .start-container {
+        /* --- 烟花画布 (置于最底层) --- */
+        #fireworks-canvas {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
-            z-index: 9999;
-            background: rgba(255,255,255,0.6);
-            backdrop-filter: blur(5px);
-            transition: opacity 0.8s ease;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0; /* 关键：放在最底层，绝不挡按钮 */
+            pointer-events: none; /* 让点击穿透画布 */
+            opacity: 0;
+            transition: opacity 1s ease;
         }
-        
-        .start-btn {
-            padding: 15px 40px;
-            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
-            border: none; border-radius: 50px;
-            color: white; font-size: 1.2rem; font-weight: bold;
-            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
-            cursor: pointer;
-            transform: scale(1);
-            transition: transform 0.2s;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .start-btn:active { transform: scale(0.95); }
 
-        /* --- 气泡容器与样式 --- */
+        /* --- 气泡容器 --- */
         #bubble-container {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* 让点击穿透 */
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             z-index: 10;
+            pointer-events: none; /* 容器不挡点击，让子元素自己处理 */
         }
 
+        /* --- 单个气泡样式 --- */
         .bubble {
             position: absolute;
-            padding: 10px 18px;
+            padding: 10px 16px;
             border-radius: 20px;
             font-size: 14px;
             line-height: 1.4;
             color: #555;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            opacity: 0;
-            transform: translateY(20px) scale(0.9);
-            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            max-width: 80%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 4px 15px rgba(255, 182, 193, 0.2);
+            max-width: 75%;
             word-wrap: break-word;
-            backdrop-filter: blur(4px); /* 磨砂玻璃感 */
-            will-change: transform, opacity; /* 硬件加速 */
+            opacity: 0;
+            transform: scale(0.8);
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transition: all 0.8s ease;
         }
 
-        /* 左侧气泡（模拟对方/世界） */
+        /* 左右分布样式 */
         .bubble.left {
-            left: 20px;
-            background: rgba(255, 255, 255, 0.85);
+            left: 5%;
             border-bottom-left-radius: 4px;
-            color: #444;
+            background: rgba(255, 255, 255, 0.9);
         }
-        
-        /* 右侧气泡（模拟你/利利） */
         .bubble.right {
-            right: 20px;
-            background: rgba(255, 230, 230, 0.9);
+            right: 5%;
             border-bottom-right-radius: 4px;
-            color: #d6336c;
-            text-align: right;
+            background: rgba(255, 240, 245, 0.95);
+            color: #d63384;
+        }
+
+        /* 消失动画类 */
+        .bubble.vanish {
+            opacity: 0 !important;
+            transform: translateY(-50px) scale(0.5) !important;
+            filter: blur(10px);
         }
 
         @keyframes popIn {
-            to { opacity: 1; transform: translateY(0) scale(1); }
+            to { opacity: 1; transform: scale(1); }
         }
 
-        /* 离场动画：向上飘散 */
-        .bubble.fly-away {
-            transition: all 1.2s ease-in !important;
-            transform: translateY(-100vh) scale(0.5) rotate(10deg) !important;
-            opacity: 0 !important;
-        }
-
-        /* --- 烟花 Canvas --- */
-        #canvas {
+        /* --- 底部控制区 --- */
+        .controls {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 5; /* 在气泡下面，但在背景上面 */
-            display: block;
-            pointer-events: none;
+            bottom: 40px;
+            left: 0; width: 100%;
+            text-align: center;
+            z-index: 100; /* 最高层级，确保可点 */
+            pointer-events: auto; /* 恢复点击 */
         }
 
-        /* --- 音乐控制 --- */
-        .music-control {
+        /* 音乐图标 */
+        .music-icon {
             position: absolute;
             top: 20px; right: 20px;
-            width: 30px; height: 30px;
+            font-size: 24px;
             z-index: 100;
-            opacity: 0.6;
+            cursor: pointer;
             animation: spin 4s linear infinite;
+            pointer-events: auto;
         }
+        .music-icon.paused { animation-play-state: paused; opacity: 0.5; }
+
         @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* 触发按钮 */
+        #start-btn {
+            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            border: none;
+            padding: 12px 35px;
+            border-radius: 50px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 20px rgba(255, 154, 158, 0.4);
+            cursor: pointer;
+            outline: none;
+            /* Safari 专用优化 */
+            -webkit-appearance: none;
+            touch-action: manipulation;
+            transition: transform 0.2s;
+        }
+
+        #start-btn:active { transform: scale(0.95); }
 
     </style>
 </head>
 <body>
 
-    <!-- 音乐图标 (SVG) -->
-    <div class="music-control" id="musicIcon">
-        <svg viewBox="0 0 24 24" fill="#ff6b81"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-    </div>
-
-    <!-- 开始按钮 -->
-    <div class="start-container" id="startScreen">
-        <button class="start-btn" id="startBtn">💌 点击接收信件</button>
-    </div>
+    <!-- 烟花层 -->
+    <canvas id="fireworks-canvas"></canvas>
 
     <!-- 气泡层 -->
     <div id="bubble-container"></div>
 
-    <!-- 烟花层 -->
-    <canvas id="canvas"></canvas>
-
-    <!-- 音频源 (建议替换为你自己的mp3链接，或者使用这个稳定的外链) -->
-   <audio id="bgm" loop preload="auto">
+    <!-- 音乐控制 -->
+    <div class="music-icon paused" id="music-toggle">🎵</div>
+    <audio id="bgm" loop preload="auto">
         <source src="./mailien.mp3" type="audio/mpeg">
     </audio>
-
+    <!-- 按钮 -->
+    <div class="controls">
+        <button id="start-btn">✨ 给利利的惊喜 ✨</button>
+    </div>
 
 <script>
-    // --- 配置区 ---
+    // --- 1. 配置数据 ---
     const messages = [
         "你是我的小确幸 💜", "世界很大，我的眼里只有你 👀", 
         "记得按时吃饭呀 🍱", "利利，我想你了 💕", 
@@ -166,210 +164,185 @@
         "期待和利利见面 ✨"
     ];
 
-    const bubbleContainer = document.getElementById('bubble-container');
-    const startScreen = document.getElementById('startScreen');
-    const startBtn = document.getElementById('startBtn');
-    const bgm = document.getElementById('bgm');
-    const musicIcon = document.getElementById('musicIcon');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-
-    let isFireworksActive = false;
-    let particles = [];
-    let bubbles = []; // 存储当前的DOM气泡元素
-
-    // --- 1. 初始化与事件监听 ---
-    
-    // 解决 iOS Safari 触摸延迟和音频自动播放限制
-    document.addEventListener('touchstart', function() {}, {passive: true});
-
-    startBtn.addEventListener('click', () => {
-        // 1. 尝试播放音乐
-        playMusic();
-        
-        // 2. 隐藏开始界面
-        startScreen.style.opacity = '0';
-        setTimeout(() => { startScreen.style.display = 'none'; }, 800);
-
-        // 3. 开始冒气泡
-        startBubbling();
-    });
-
-    function playMusic() {
-        bgm.volume = 0.5;
-        bgm.play().then(() => {
-            musicIcon.style.animationPlayState = 'running';
-        }).catch(e => {
-            console.log("Audio autoplay blocked, waiting for interaction");
-            musicIcon.style.animation = 'none';
-            musicIcon.style.opacity = '0.3';
-        });
-    }
-
-    // --- 2. 气泡生成逻辑 (防重叠优化版) ---
-
-    function startBubbling() {
-        let count = 0;
-        const maxBubbles = 30; // 手机上不要太多，30个足够营造氛围且不卡
-        
-        const interval = setInterval(() => {
-            if (count >= maxBubbles) {
-                clearInterval(interval);
-                // 气泡发完后，等待几秒自动放烟花，或者你可以加个按钮
-                setTimeout(triggerGrandFinale, 2000); 
-                return;
-            }
-            createBubble();
-            count++;
-        }, 400); // 每0.4秒弹一个
-    }
+    // --- 2. 气泡生成逻辑 ---
+    const container = document.getElementById('bubble-container');
+    let bubbleInterval;
 
     function createBubble() {
         const text = messages[Math.floor(Math.random() * messages.length)];
-        const div = document.createElement('div');
-        div.className = `bubble ${Math.random() > 0.5 ? 'left' : 'right'}`;
-        div.innerText = text;
+        const bubble = document.createElement('div');
+        bubble.className = `bubble ${Math.random() > 0.5 ? 'left' : 'right'}`;
+        bubble.innerText = text;
+
+        // 随机位置算法 (避开边缘和中心重叠)
+        const topPos = 10 + Math.random() * 70; // 10% - 80% 高度
+        bubble.style.top = `${topPos}%`;
         
-        // 随机垂直位置，但避免太靠边
-        const topPos = 10 + Math.random() * 70; 
-        div.style.top = topPos + '%';
-        
-        // 随机微调左右位置，增加自然感
-        const randomOffset = (Math.random() * 10 - 5) + '%';
-        if(div.classList.contains('left')) {
-             div.style.left = `calc(20px + ${randomOffset})`;
+        // 简单的防重叠微调
+        if(bubble.classList.contains('left')) {
+            bubble.style.left = `${5 + Math.random() * 10}%`;
         } else {
-             div.style.right = `calc(20px - ${randomOffset})`;
+            bubble.style.right = `${5 + Math.random() * 10}%`;
         }
 
-        // 随机层级，保证新出来的在上面
-        div.style.zIndex = Math.floor(Math.random() * 10);
+        container.appendChild(bubble);
 
-        bubbleContainer.appendChild(div);
-        bubbles.push(div);
-
-        // 限制屏幕上的气泡数量，防止手机卡顿
-        if (bubbles.length > 20) {
-            const oldBubble = bubbles.shift();
-            oldBubble.remove();
+        // 限制屏幕上的气泡数量，防止太多太乱
+        if (container.children.length > 12) {
+            container.removeChild(container.firstChild);
         }
     }
 
-    // --- 3. 终极烟花逻辑 (物理引擎版) ---
+    // 初始生成几个
+    for(let i=0; i<5; i++) setTimeout(createBubble, i*300);
+    // 持续生成
+    bubbleInterval = setInterval(createBubble, 1200);
 
-    function triggerGrandFinale() {
-        if(isFireworksActive) return;
-        isFireworksActive = true;
 
-        // A. 切换黑夜模式
-        document.body.classList.add('night-mode');
+    // --- 3. 音乐控制 ---
+    const musicBtn = document.getElementById('music-toggle');
+    const bgm = document.getElementById('bgm');
+    let isPlaying = false;
 
-        // B. 气泡华丽退场
-        bubbles.forEach(b => b.classList.add('fly-away'));
-        setTimeout(() => {
-            bubbleContainer.innerHTML = ''; // 彻底清除DOM，释放内存给Canvas
-        }, 1200);
+    musicBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // 防止冒泡
+        if (isPlaying) {
+            bgm.pause();
+            musicBtn.classList.add('paused');
+        } else {
+            bgm.play().catch(e => console.log("需用户交互才能播放"));
+            musicBtn.classList.remove('paused');
+        }
+        isPlaying = !isPlaying;
+    });
 
-        // C. 调整Canvas尺寸并开始循环
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-        loopFireworks();
 
-        // D. 自动发射几波大的
-        let launches = 0;
-        const launchInterval = setInterval(() => {
-            launchRocket();
-            launches++;
-            if(launches > 15) clearInterval(launchInterval); // 发射15波后停止自动发射，改为点击发射
-        }, 800);
-        
-        // E. 允许用户点击屏幕继续放烟花
-        document.addEventListener('click', (e) => {
-            // 排除点击音乐图标的情况
-            if(e.target.closest('.music-control')) return;
-            launchRocket(e.clientX, e.clientY);
-        });
-        
-        // 兼容触摸
-        document.addEventListener('touchstart', (e) => {
-             if(e.target.closest('.music-control')) return;
-             const touch = e.touches[0];
-             launchRocket(touch.clientX, touch.clientY);
-        });
-    }
+    // --- 4. 烟花引擎 (高性能版) ---
+    const canvas = document.getElementById('fireworks-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let fireworksActive = false;
 
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
     }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-    // 粒子类
     class Particle {
-        constructor(x, y, hue) {
-            this.x = x;
-            this.y = y;
+        constructor(x, y, color) {
+            this.x = x; this.y = y;
+            this.color = color;
             // 爆炸速度
             const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 5 + 2; 
+            const speed = Math.random() * 5 + 2;
             this.vx = Math.cos(angle) * speed;
             this.vy = Math.sin(angle) * speed;
-            
-            this.hue = hue + Math.random() * 30 - 15; // 颜色微调
-            this.brightness = Math.random() * 30 + 50;
             this.alpha = 1;
             this.decay = Math.random() * 0.015 + 0.005; // 衰减速度
-            
             this.gravity = 0.05; // 重力
-            this.friction = 0.96; // 空气阻力
         }
-
         update() {
-            this.vx *= this.friction;
-            this.vy *= this.friction;
-            this.vy += this.gravity;
-            
             this.x += this.vx;
             this.y += this.vy;
+            this.vy += this.gravity; // 加上重力
+            this.vx *= 0.95; // 空气阻力
+            this.vy *= 0.95;
             this.alpha -= this.decay;
         }
-
-        draw(ctx) {
-            ctx.globalCompositeOperation = 'lighter'; // 混合模式，让重叠部分发光
-            ctx.fillStyle = `hsla(${this.hue}, 100%, ${this.brightness}%, ${this.alpha})`;
+        draw() {
+            ctx.save();
+            ctx.globalAlpha = this.alpha;
+            ctx.fillStyle = this.color;
             ctx.beginPath();
             ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
             ctx.fill();
+            ctx.restore();
         }
     }
 
-    // 烟花弹（升空阶段）
-    class Rocket {
-        constructor(targetX, targetY) {
-            this.x = canvas.width / 2;
-            this.y = canvas.height;
-            // 如果是点击触发的，从底部对应位置升起
-            if (targetX) this.x = targetX;
-            
-            this.targetX = targetX || Math.random() * canvas.width;
-            this.targetY = targetY || (canvas.height * 0.2 + Math.random() * canvas.height * 0.4);
-            
-            this.distanceToTarget = Math.sqrt(Math.pow(this.targetX - this.x, 2) + Math.pow(this.targetY - this.y, 2));
-            this.angle = Math.atan2(this.targetY - this.y, this.targetX - this.x);
-            this.speed = 12; // 升空速度
-            this.vx = Math.cos(this.angle) * this.speed;
-            this.vy = Math.sin(this.angle) * this.speed;
-            
-            this.hue = Math.random() * 360;
-            this.coordinates = [];
-            this.coordinateCount = 3; // 拖尾长度
-            while(this.coordinateCount--) {
-                this.coordinates.push([this.x, this.y]);
-            }
+    function createFirework(x, y) {
+        const colors = ['#ff0043', '#14fc56', '#1e7fff', '#e60aff', '#ffbf36', '#ffffff'];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        for (let i = 0; i < 60; i++) { // 粒子数量
+            particles.push(new Particle(x, y, color));
+        }
+    }
+
+    function animateFireworks() {
+        if (!fireworksActive && particles.length === 0) return;
+
+        // 拖尾效果：不完全清除画布，而是覆盖一层半透明黑
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; 
+        // 注意：因为背景是粉色的，这里我们用一种特殊的混合模式或者简单处理
+        // 为了配合粉色背景，我们不清除黑色，而是利用 globalCompositeOperation
+        
+        // 简单方案：直接清除，因为背景是渐变色，拖尾在亮色背景下不明显
+        // 想要拖尾，必须重绘背景，但这很耗性能。
+        // 妥协方案：仅对粒子做透明度衰减，不做强行拖尾，保证流畅度。
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 随机自动发射
+        if (fireworksActive && Math.random() < 0.05) {
+            createFirework(
+                Math.random() * canvas.width, 
+                Math.random() * canvas.height * 0.6 // 在上半部分爆炸
+            );
         }
 
-        update(index) {
-            this.coordinates.pop();
-            this.coordinates.unshift([this.x, this.y]);
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.update();
+            p.draw();
+            if (p.alpha <= 0) particles.splice(i, 1);
+        }
+
+        requestAnimationFrame(animateFireworks);
+    }
+
+
+    // --- 5. 核心交互：点击按钮后的完美转场 ---
+    const startBtn = document.getElementById('start-btn');
+
+    startBtn.addEventListener('click', () => {
+        // A. 尝试播放音乐 (如果还没播)
+        if (!isPlaying) {
+            bgm.play().then(() => {
+                isPlaying = true;
+                musicBtn.classList.remove('paused');
+            }).catch(e => {});
+        }
+
+        // B. 按钮消失
+        startBtn.style.transition = 'all 0.5s';
+        startBtn.style.opacity = '0';
+        startBtn.style.transform = 'scale(0)';
+        setTimeout(() => startBtn.style.display = 'none', 500);
+
+        // C. 气泡退场动画
+        const bubbles = document.querySelectorAll('.bubble');
+        bubbles.forEach((b, index) => {
+            setTimeout(() => {
+                b.classList.add('vanish');
+            }, index * 50); // 像多米诺骨牌一样依次消失
+        });
+
+        // D. 启动烟花
+        setTimeout(() => {
+            container.style.display = 'none'; // 彻底移除气泡层
+            canvas.style.opacity = '1'; // 显示画布
+            fireworksActive = true;
             
-            this.vx *= 1.01; // 稍微加速
-            this.vy *=
+            // 先来一波大的
+            createFirework(canvas.width / 2, canvas.height / 2);
+            setTimeout(() => createFirework(canvas.width * 0.3, canvas.height * 0.4), 200);
+            setTimeout(() => createFirework(canvas.width * 0.7, canvas.height * 0.4), 400);
+            
+            animateFireworks();
+        }, 1000); // 等待气泡飘散一会儿
+    });
+
+</script>
+</body>
+</html>
