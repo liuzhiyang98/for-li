@@ -5,319 +5,406 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>💌 To 利利</title>
     <style>
-        /* --- 基础设置与字体 --- */
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
         body {
             background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 100%);
             height: 100vh; width: 100vw;
-            overflow: hidden; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
             position: relative;
+            transition: background 1.5s ease;
+        }
+        body.night-mode {
+            background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
         }
 
-        /* --- 启动按钮 (解决 Safari 自动播放限制) --- */
+        /* --- 启动按钮 (呼吸光晕 + 磨砂玻璃) --- */
         #start-btn {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            padding: 16px 40px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 50px;
-            box-shadow: 0 10px 30px rgba(255, 105, 180, 0.3);
-            color: #ff6b81; font-size: 18px; font-weight: bold;
+            padding: 20px 50px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 60px;
+            color: #d6336c; font-size: 20px; font-weight: 700;
+            letter-spacing: 3px;
             cursor: pointer; z-index: 1000;
+            box-shadow: 0 0 0 0 rgba(214, 51, 108, 0.4), 0 10px 30px rgba(214, 51, 108, 0.2);
+            animation: breathe 2s ease-in-out infinite;
             transition: all 0.3s ease;
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
         }
-        #start-btn:active { transform: translate(-50%, -50%) scale(0.95); }
+        #start-btn:active { transform: translate(-50%, -50%) scale(0.95); animation: none; }
+        @keyframes breathe {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(214, 51, 108, 0.4), 0 10px 30px rgba(214, 51, 108, 0.2); }
+            50% { box-shadow: 0 0 0 15px rgba(214, 51, 108, 0), 0 10px 30px rgba(214, 51, 108, 0.3); }
+        }
 
-        /* --- 气泡容器 --- */
+        /* --- 气泡容器 (Flex 流式防重叠) --- */
         .bubble-container {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; inset: 0;
+            padding: 60px 15px 30px;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            gap: 12px;
             pointer-events: none; z-index: 10;
-            padding: 20px; display: flex; flex-direction: column;
+            overflow: hidden;
         }
-
-        /* --- 气泡样式 --- */
         .bubble {
-            max-width: 75%; padding: 12px 18px; margin-bottom: 15px;
-            border-radius: 20px; font-size: 15px; line-height: 1.5;
-            opacity: 0; transform: translateY(20px) scale(0.9);
-            animation: floatUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            max-width: 78%; padding: 12px 18px;
+            border-radius: 22px; font-size: 15px; line-height: 1.6;
+            opacity: 0; transform: translateY(15px) scale(0.95);
+            animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
             word-wrap: break-word; position: relative;
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
         }
-
-        /* 左侧气泡 (世界/对方) */
         .bubble.left {
             align-self: flex-start;
-            background: rgba(255, 255, 255, 0.85);
-            color: #555;
-            border-bottom-left-radius: 4px;
+            background: rgba(255, 255, 255, 0.88);
+            color: #444; border-bottom-left-radius: 6px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
         }
-
-        /* 右侧气泡 (利利/你) */
         .bubble.right {
             align-self: flex-end;
             background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-            color: #fff;
-            border-bottom-right-radius: 4px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            color: #fff; border-bottom-right-radius: 6px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 12px rgba(255, 154, 158, 0.25);
         }
-
-        @keyframes floatUp {
-            to { opacity: 1; transform: translateY(0) scale(1); }
+        @keyframes popIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+        .bubble.vanish {
+            transition: all 0.8s ease-in !important;
+            opacity: 0 !important; transform: translateY(-40px) scale(0.8) !important;
         }
 
         /* --- 烟花画布 --- */
         #fireworks-canvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 5; /* 放在气泡下面，防止遮挡点击 */
-            opacity: 0; transition: opacity 1s ease;
-        }
-
-        /* --- 转场遮罩 --- */
-        .overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; opacity: 0; pointer-events: none;
-            transition: opacity 1.5s ease; z-index: 20;
+            position: absolute; inset: 0;
+            z-index: 5; pointer-events: none;
+            opacity: 0; transition: opacity 1.2s ease;
         }
     </style>
 </head>
 <body>
-
-    <!-- 启动按钮 -->
-    <div id="start-btn">开启我们的故事 💌</div>
-    
-    <!-- 黑色转场层 -->
-    <div class="overlay" id="overlay"></div>
-    
-    <!-- 气泡区域 -->
+    <div id="start-btn">💌 开启我们的故事</div>
     <div class="bubble-container" id="bubble-area"></div>
-    
-    <!-- 烟花画布 -->
     <canvas id="fireworks-canvas"></canvas>
-
-    <!-- 音乐文件 (请替换为你的 mp3 链接) -->
+    <!-- ⚠️ 请替换为你的真实 MP3 链接 -->
     <audio id="bgm" loop preload="auto">
         <source src="./mailien.mp3" type="audio/mpeg">
     </audio>
 
 <script>
-    // --- 配置区 ---
-    const CONFIG = {
-        bubbleDuration: 240, // 气泡展示时长 (秒) -> 4分钟
-        fireworkDuration: 48, // 烟花持续时长 (秒)
-        pauseDuration: 10,   // 音乐暂停时长 (秒)
-        spawnRate: 1200      // 气泡生成间隔 (毫秒)
-    };
+// ==================== 300句专属情话库 ====================
+const TEXT_POOL = [
+    // --- 日常温柔篇 (1-60) ---
+    "每天都要开心哦😊","记得按时吃饭呀🍱","今天也要元气满满💪","早点休息别熬夜🌙",
+    "多喝水照顾好自己💧","出门记得带伞☂️","天冷了多穿点🧣","累了就歇一歇🫂",
+    "想你了💭","在干嘛呢👀","有没有好好吃饭🍚","今天过得怎么样🌈",
+    "看到你消息就安心了💕","你的笑容是我今天的能量✨","晚安好梦🌙","早安我的宝☀️",
+    "你是我每天醒来的理由🌅","想你想到睡不着🥺","梦里都是你💫","醒来第一个想到的就是你❤️",
+    "你是我的小确幸💜","遇见你真好🥰","有你在我就很踏实🛡️","你是我的安心丸💊",
+    "喜欢你笑的样子😊","你生气也可爱😤","你做什么我都支持🙌","你是最棒的🏆",
+    "抱抱你🫂","亲亲你😘","牵你的手不想放🤝","想把你藏进口袋🧸",
+    "你是我最喜欢的🐷","你是我的宝贝👶","你是人间四月天🌸","你是我的春天🌷",
+    "和你在一起时间过得好快⏰","舍不得和你分开🥺","期待下次见面✨","倒计时见面的日子📅",
+    "你是我的心头肉💗","你是我的掌上明珠💎","你是我的全世界🌍","你是我的一切🌟",
+    "爱你三千遍🏹","爱你到永远♾️","爱你不止今天📆","每一天都比昨天更爱你📈",
+    "你是我的私有浪漫🌹","连晚风都偏爱你🍃","想做你的避风港⛵","你是我的未完待续📖",
+    "想把银河摘下来送你🌌","你是我平淡生活里的刺眼光芒✨","心跳的频率是你💓",
+    "想和你虚度时光⏳","哪怕世界颠倒我也奔向你🏃","你是我所有的不期而遇🎁",
+    "想做你的小朋友🧒","想被你宠坏🥺","你是我的例外和偏爱💝","只对你一个人好🫵",
 
-    // --- 专属文案库 (不重复池) ---
-    const TEXT_POOL = [
-        "每天都要开心哦 😊", "利利是最特别的存在 🌟", "麦莉恩这首歌送给你",
-        "遇见你真好 ❤️", "想和你一起看日落 🌇", "爱你三千遍",
-        "无论发生什么，我都在 🛡️", "你是我的小确幸 💜", "喜欢你笑的样子",
-        "世界很大，我的眼里只有你", "一起看星星 ✨", "记得按时吃饭呀 🍱",
-        "你是我最喜欢的", "期待和利利见面", "你是我所有的少女情怀",
-        "想把所有温柔都给你", "今天的风很甜，像你一样", "想做你的避风港",
-        "你是我的私有浪漫", "连晚风都偏爱你", "想牵着你的手走过四季",
-        "你是我藏在心底的秘密", "见到你，天气都变好了", "你是我的未完待续",
-        "想把银河摘下来送你", "你是我平淡生活里的刺眼光芒", "心跳的频率是你",
-        "想和你虚度时光", "你是我所有的不期而遇", "哪怕世界颠倒，我也奔向你"
-    ];
+    // --- 深情告白篇 (61-120) ---
+    "利利是最特别的存在🌟","麦莉恩这首歌送给你🎵","世界很大眼里只有你👀",
+    "想和你一起看日落🌇","无论发生什么我都在🛡️","你是我藏在心底的秘密🤫",
+    "见到你天气都变好了☀️","想把所有温柔都给你🌸","今天的风很甜像你一样🍬",
+    "你是我所有的少女情怀💕","你是我最美的遇见🌺","余生请多指教🤝",
+    "愿与你共度余生💑","你是我一生的挚爱💍","非你不可🚫","除了你我谁都不想要🙅",
+    "你是唯一的选择✅","命中注定是你🎯","缘分让我们相遇🤝","感谢命运安排🙏",
+    "你是上天给我的礼物🎁","珍惜和你的每一刻⏱️","不想错过你🏃","害怕失去你😰",
+    "你是我的安全感🔒","你是我的归属感🏠","有你在就是家🏡","你是心灵的港湾⚓",
+    "灵魂深处是你🧠","血液里流淌着对你的爱🩸","呼吸间都是你的味道🌬️",
+    "目光所及皆是你👁️","心之所向皆是你💘","念念不忘是你🔄","朝思暮想是你🌅",
+    "入骨相思是你💀","刻骨铭心是你🗿","此生不换是你🔄","来生还要是你🔁",
+    "三生三世都是你🔄","千秋万代都是你🏛️","海枯石烂不变心🌊","天荒地老不离弃🏔️",
+    "山无棱天地合才敢与君绝⛰️","愿得一心人白首不相离👴","执子之手与子偕老🤝",
+    "死生契阔与子成说💀","你是我的星辰大海🌊","你是我的日月星辰🌙",
+    "你是我的春夏秋冬🍂","你是我的东南西北🧭","你是我的过去现在未来⏳",
+    "你是我的起点和终点🏁","你是我的因和果🔄","你是我的问题和答案❓",
+    "你是我的诗和远方📜","你是我的柴米油盐🍚","你是我的阳春白雪❄️",
+    "你是我的下里巴人🎵","你是我的高山流水🏔️","你是我的知音知己🎼",
+    "你是我的良师益友📚","你是我的战友伙伴🤝","你是我的爱人伴侣💑",
 
-    let usedTexts = []; // 记录已使用的文本
-    let isRunning = false;
-    let timerInterval = null;
-    let bubbleTimer = null;
-    
-    // --- DOM 元素 ---
-    const startBtn = document.getElementById('start-btn');
-    const bgm = document.getElementById('bgm');
-    const bubbleArea = document.getElementById('bubble-area');
-    const overlay = document.getElementById('overlay');
-    const canvas = document.getElementById('fireworks-canvas');
-    const ctx = canvas.getContext('2d');
+    // --- 俏皮可爱篇 (121-180) ---
+    "你是小笨蛋但是我的🤪","你是小猪猪但是我的🐷","你是小傻瓜但是我的🤭",
+    "你是小可爱本爱🥰","你是仙女下凡🧚","你是天使降临👼","你是精灵转世🧝",
+    "你是公主殿下👸","你是女王大人👑","你是老板我听你的🫡","你是领导我服从你🫡",
+    "你是老师我学习你📖","你是医生你治愈我🩺","你是厨师你喂饱我🍳",
+    "你是司机你载着我🚗","你是导航你指引我🧭","你是灯塔照亮我🗼",
+    "你是太阳温暖我☀️","你是月亮陪伴我🌙","你是星星点缀我⭐",
+    "你是花朵芬芳我🌺","你是清泉滋润我💧","你是微风轻抚我🍃",
+    "你是彩虹惊艳我🌈","你是烟火绚烂我🎆","你是糖果甜蜜我🍬",
+    "你是蛋糕柔软我🍰","你是奶茶醇厚我🧋","你是火锅热辣我🍲",
+    "你是冰淇淋凉爽我🍦","你是巧克力丝滑我🍫","你是棉花糖蓬松我☁️",
+    "你是果冻Q弹我🍮","你是布丁嫩滑我🍮","你是饼干酥脆我🍪",
+    "你是面包松软我🍞","你是米饭香甜我🍚","你是面条劲道我🍜",
+    "你是饺子团圆我🥟","你是汤圆圆满我🍡","你是月饼思念我🥮",
+    "你是粽子牵挂我🫔","你是苹果平安我🍎","你是橙子心想事成我🍊",
+    "你是葡萄多子多福我🍇","你是草莓甜美我🍓","你是西瓜解渴我🍉",
+    "你是桃子长寿我🍑","你是樱桃珍贵我🍒","你是荔枝甜蜜我🫐",
+    "你是芒果光芒我🥭","你是菠萝热情我🍍","你是椰子清爽我🥥",
+    "你是香蕉快乐我🍌","你是柠檬酸涩但清新我🍋","你是橄榄回甘我🫒",
+    "你是辣椒刺激我🌶️","你是花椒麻酥我🫑","你是大蒜杀菌我🧄",
+    "你是生姜暖胃我🫚","你是葱花提香我🧅","你是香菜独特我🌿",
 
-    // --- 核心逻辑：获取不重复文本 ---
-    function getUniqueText() {
-        if (usedTexts.length >= TEXT_POOL.length) {
-            usedTexts = []; // 如果全部用完了，重置池子
-        }
-        let available = TEXT_POOL.filter(t => !usedTexts.includes(t));
-        let text = available[Math.floor(Math.random() * available.length)];
-        usedTexts.push(text);
-        return text;
+    // --- 诗意文艺篇 (181-240) ---
+    "晓看天色暮看云行也思君坐也思君☁️","玲珑骰子安红豆入骨相思知不知🎲",
+    "山有木兮木有枝心悦君兮君不知🌳","愿我如星君如月夜夜流光相皎洁🌙",
+    "两情若是久长时又岂在朝朝暮暮💕","身无彩凤双飞翼心有灵犀一点通🦋",
+    "曾经沧海难为水除却巫山不是云☁️","衣带渐宽终不悔为伊消得人憔悴👔",
+    "众里寻他千百度蓦然回首那人却在灯火阑珊处🏮","人生若只如初见何事秋风悲画扇🍂",
+    "此情可待成追忆只是当时已惘然💭","问世间情为何物直教生死相许💀",
+    "在天愿作比翼鸟在地愿为连理枝🐦","春蚕到死丝方尽蜡炬成灰泪始干🕯️",
+    "相见时难别亦难东风无力百花残🌸","多情自古伤离别更那堪冷落清秋节🍂",
+    "今宵酒醒何处杨柳岸晓风残月🌙","花自飘零水自流一种相思两处闲愁🌺",
+    "此去经年应是良辰好景虚设🏞️","便纵有千种风情更与何人说💬",
+    "十年生死两茫茫不思量自难忘💀","千里孤坟无处话凄凉🪦",
+    "纵使相逢应不识尘满面鬓如霜👴","夜来幽梦忽还乡小轩窗正梳妆🪞",
+    "相顾无言惟有泪千行😢","料得年年肠断处明月夜短松冈🌲",
+    "君住长江头我住长江尾日日思君不见君共饮长江水🌊","我住长江头君住长江尾",
+    "只愿君心似我心定不负相思意💕","换我心为你心始知相忆深💘",
+    "天涯地角有穷时只有相思无尽处🌏","一寸相思千万绪人间没个安排处💭",
+    "欲寄彩笺兼尺素山长水阔知何处📜","鸿雁在云鱼在水惆怅此情难寄🐟",
+    "落花人独立微雨燕双飞🌧️","当时明月在曾照彩云归☁️",
+    "琵琶弦上说相思当时明月在曾照彩云归🎵","梦后楼台高锁酒醒帘幕低垂🏯",
+    "去年春恨却来时落花人独立微雨燕双飞🌸","记得小苹初见两重心字罗衣👗",
+    "琵琶弦上说相思当时明月在曾照彩云归🎶","从别后忆相逢几回魂梦与君同💭",
+    "今宵剩把银釭照犹恐相逢是梦中🕯️","彩袖殷勤捧玉钟当年拚却醉颜红🍷",
+    "舞低杨柳楼心月歌尽桃花扇底风💃","从别后忆相逢几回魂梦与君同🔄",
+    "今宵剩把银釭照犹恐相逢是梦中🌙","醉拍春衫惜旧香天将离恨恼疏狂🍷",
+    "年年陌上生秋草日日楼中到夕阳🌅","云渺渺水茫茫征人归路许多长🌊",
+    "相思本是无凭语莫向花笺费泪行📜","欲写彩笺书别怨泪痕早已先书满😢",
+    "肠已断泪难收相思重上小红楼🏯","情知已被山遮断频倚阑干不自由🏔️",
+    "晚日寒鸦一片愁柳塘新绿却温柔🌅","若教眼底无离恨不信人间有白头👴",
+    "肠已断泪难收相思重上小红楼🏯","情知已被山遮断频倚阑干不自由🏔️",
+
+    // --- 承诺守护篇 (241-300) ---
+    "我会一直陪着你🤝","我不会离开你🚫","我不会放弃你💪","我不会辜负你🙏",
+    "我不会欺骗你🤥","我不会伤害你🩹","我不会忽略你👁️","我不会忘记你🧠",
+    "我不会嫌弃你🙅","我不会厌倦你😤","我不会背叛你🚫","我不会抛弃你🏃",
+    "我会保护你🛡️","我会照顾你🫂","我会心疼你💗","我会理解你🤝",
+    "我会包容你🫂","我会尊重你🙇","我会信任你🤝","我会支持你🙌",
+    "我会鼓励你💪","我会赞美你👏","我会欣赏你👀","我会珍惜你💎",
+    "我会呵护你🫂","我会疼爱你💕","我会宠溺你🥰","我会满足你✅",
+    "我会陪伴你🤝","我会守候你⏳","我会等待你🧍","我会追寻你🏃",
+    "我会拥抱你🫂","我会亲吻你😘","我会抚摸你🤚","我会凝视你👁️",
+    "我会倾听你👂","我会回应你💬","我会记住你🧠","我会想念你💭",
+    "我会梦见你💫","我会呼唤你📢","我会寻找你🔍","我会发现你👀",
+    "我会选择你✅","我会认定你🎯","我会坚持你💪","我会守护你🛡️",
+    "我会捍卫你⚔️","我会维护你🔧","我会保全你🛡️","我会成全你🙏",
+    "我会成就你🏆","我会完善你🔧","我会提升你📈","我会优化你⚙️",
+    "我会美化你🎨","我会净化你🧹","我会升华你🚀","我会超越你🏃",
+    "我会突破你🚧","我会创新你💡","我会改变你🔄","我会影响你🌊",
+    "我会感化你❤️","我会融化你🫠","我会温暖你☀️","我会照亮你💡",
+    "我会点燃你🔥","我会激发你⚡","我会唤醒你⏰","我会启迪你💡",
+    "我会引领你🧭","我会指导你📖","我会教导你👨‍🏫","我会培养你🌱",
+    "我会培育你🌿","我会浇灌你💧","我会施肥你🌱","我会修剪你✂️",
+    "我会收获你🌾","我会珍藏你📦","我会展示你🖼️","我会分享你🤝",
+    "我会传播你📡","我会弘扬你📢","我会传承你🔄","我会延续你♾️"
+];
+
+// ==================== 配置区 ====================
+const CONFIG = {
+    bubbleDuration: 240,   // 气泡阶段时长(秒) = 4分钟
+    fireworkDuration: 48,  // 烟花持续时长(秒)
+    pauseDuration: 10,     // 音乐暂停时长(秒)
+    spawnRate: 800         // 气泡生成间隔(ms)，300句/240秒≈800ms一句
+};
+
+// ==================== 全局状态 ====================
+let shuffledTexts = [];
+let textIndex = 0;
+let isRunning = false;
+let startTime = 0;
+let rafId = null;
+let bubbleTimer = null;
+
+// DOM
+const startBtn = document.getElementById('start-btn');
+const bgm = document.getElementById('bgm');
+const bubbleArea = document.getElementById('bubble-area');
+const canvas = document.getElementById('fireworks-canvas');
+const ctx = canvas.getContext('2d');
+
+// ==================== Fisher-Yates 洗牌算法 ====================
+function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function getNextText() {
+    if (textIndex >= shuffledTexts.length) {
+        shuffledTexts = shuffle(TEXT_POOL);
+        textIndex = 0;
+    }
+    return shuffledTexts[textIndex++];
+}
+
+// ==================== 气泡系统 ====================
+function createBubble() {
+    if (!isRunning) return;
+    const b = document.createElement('div');
+    b.className = `bubble ${Math.random() > 0.5 ? 'right' : 'left'}`;
+    b.innerText = getNextText();
+    bubbleArea.appendChild(b);
+
+    // 保持屏幕内最多10条，超出移除最早的
+    while (bubbleArea.children.length > 10) {
+        bubbleArea.removeChild(bubbleArea.firstChild);
     }
 
-    // --- 气泡生成器 ---
-    function createBubble() {
-        if (!isRunning) return;
-        
-        const bubble = document.createElement('div');
-        bubble.className = `bubble ${Math.random() > 0.5 ? 'right' : 'left'}`;
-        bubble.innerText = getUniqueText();
-        
-        // 随机微调位置，增加灵动感
-        const randomMargin = Math.floor(Math.random() * 20);
-        bubble.style.marginLeft = `${randomMargin}px`;
-        bubble.style.marginRight = `${randomMargin}px`;
+    // 随机微调间隔 600~1000ms
+    const next = CONFIG.spawnRate + (Math.random() * 400 - 200);
+    bubbleTimer = setTimeout(createBubble, next);
+}
 
-        bubbleArea.appendChild(bubble);
+function clearBubbles() {
+    clearTimeout(bubbleTimer);
+    const bs = bubbleArea.querySelectorAll('.bubble');
+    bs.forEach((b, i) => setTimeout(() => b.classList.add('vanish'), i * 40));
+    setTimeout(() => { bubbleArea.innerHTML = ''; }, 1200);
+}
 
-        // 保持屏幕内气泡数量不超过 8 个，防止溢出
-        if (bubbleArea.children.length > 8) {
-            bubbleArea.removeChild(bubbleArea.firstChild);
-        }
+// ==================== 烟花引擎 (修复黑屏) ====================
+let particles = [];
+let fireworksActive = false;
 
-        // 动态调整生成速度
-        let nextSpawn = CONFIG.spawnRate + (Math.random() * 800 - 400);
-        bubbleTimer = setTimeout(createBubble, nextSpawn);
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+class Particle {
+    constructor(x, y, hue) {
+        this.x = x; this.y = y;
+        this.hue = hue + (Math.random() * 40 - 20);
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 5 + 2;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.alpha = 1;
+        this.decay = Math.random() * 0.012 + 0.006;
+        this.gravity = 0.04;
+        this.friction = 0.97;
+    }
+    update() {
+        this.vx *= this.friction;
+        this.vy *= this.friction;
+        this.vy += this.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= this.decay;
+    }
+    draw(c) {
+        c.save();
+        c.globalAlpha = this.alpha;
+        c.fillStyle = `hsl(${this.hue}, 100%, 65%)`;
+        c.beginPath();
+        c.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+    }
+}
+
+function explode(x, y) {
+    const hue = Math.random() * 360;
+    for (let i = 0; i < 70; i++) particles.push(new Particle(x, y, hue));
+}
+
+function animateFireworks() {
+    if (!fireworksActive && particles.length === 0) return;
+
+    // ✅ 关键修复：每帧完全清除 + lighter混合模式
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.globalCompositeOperation = 'lighter';
+
+    if (fireworksActive && Math.random() < 0.08) {
+        explode(Math.random() * canvas.width, Math.random() * canvas.height * 0.5 + canvas.height * 0.1);
     }
 
-    // --- 烟花引擎 (高性能粒子系统) ---
-    let particles = [];
-    let fireworksActive = false;
-
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    class Particle {
-        constructor(x, y, color) {
-            this.x = x; this.y = y;
-            this.color = color;
-            const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 4 + 1;
-            this.vx = Math.cos(angle) * speed;
-            this.vy = Math.sin(angle) * speed;
-            this.alpha = 1;
-            this.decay = Math.random() * 0.015 + 0.005;
-            this.gravity = 0.05;
-        }
-        update() {
-            this.x += this.vx;
-            this.y += this.vy;
-            this.vy += this.gravity; // 重力下坠
-            this.alpha -= this.decay;
-        }
-        draw() {
-            ctx.save();
-            ctx.globalAlpha = this.alpha;
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        }
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw(ctx);
+        if (particles[i].alpha <= 0) particles.splice(i, 1);
     }
 
-    function launchFirework() {
-        if (!fireworksActive) return;
-        const x = Math.random() * canvas.width;
-        const y = canvas.height * 0.8; // 从底部发射
-        const targetY = Math.random() * (canvas.height * 0.4); // 爆炸高度
-        
-        // 模拟上升过程（简化为直接爆炸）
-        const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff'];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        
-        for (let i = 0; i < 60; i++) {
-            particles.push(new Particle(x, targetY, color));
-        }
+    rafId = requestAnimationFrame(animateFireworks);
+}
+
+// ==================== 主时间轴 (rAF 驱动，防Safari后台挂起) ====================
+function tick() {
+    if (!isRunning) return;
+    const elapsed = (Date.now() - startTime) / 1000;
+
+    // 阶段1 → 阶段2：气泡结束，烟花开始
+    if (elapsed >= CONFIG.bubbleDuration && !fireworksActive && particles.length === 0) {
+        clearBubbles();
+        document.body.classList.add('night-mode');
+        canvas.style.opacity = '1';
+        fireworksActive = true;
+        animateFireworks();
     }
 
-    function animateFireworks() {
-        if (!fireworksActive && particles.length === 0) return;
-        
-        // 拖尾效果
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // 随机发射新烟花
-        if (fireworksActive && Math.random() < 0.1) {
-            launchFirework();
-        }
-
-        for (let i = particles.length - 1; i >= 0; i--) {
-            particles[i].update();
-            particles[i].draw();
-            if (particles[i].alpha <= 0) particles.splice(i, 1);
-        }
-        
-        requestAnimationFrame(animateFireworks);
-    }
-
-    // --- 主流程控制器 ---
-    function startJourney() {
-        startBtn.style.display = 'none';
-        isRunning = true;
-        bgm.play().catch(e => console.log("Audio play failed:", e));
-        
-        // 1. 开始气泡阶段
-        createBubble();
-        
-        // 监控时间轴
-        let elapsed = 0;
-        timerInterval = setInterval(() => {
-            elapsed++;
-            
-            // 4分钟节点：切换烟花
-            if (elapsed === CONFIG.bubbleDuration) {
-                transitionToFireworks();
-            }
-            
-            // 4分48秒节点：烟花结束，音乐暂停
-            if (elapsed === CONFIG.bubbleDuration + CONFIG.fireworkDuration) {
-                endFireworksAndPause();
-            }
-            
-            // 4分58秒节点：恢复音乐，开启新一轮
-            if (elapsed === CONFIG.bubbleDuration + CONFIG.fireworkDuration + CONFIG.pauseDuration) {
-                resetAndLoop();
-            }
-        }, 1000);
-    }
-
-    function transitionToFireworks() {
-        clearTimeout(bubbleTimer);
-        bubbleArea.innerHTML = ''; // 清空气泡
-        overlay.style.opacity = '1'; // 背景变黑
-        
-        setTimeout(() => {
-            canvas.style.opacity = '1';
-            fireworksActive = true;
-            animateFireworks();
-        }, 1000);
-    }
-
-    function endFireworksAndPause() {
+    // 阶段2 → 阶段3：烟花结束，音乐暂停
+    if (elapsed >= CONFIG.bubbleDuration + CONFIG.fireworkDuration && fireworksActive) {
         fireworksActive = false;
-        bgm.pause();
-        
-        // 慢慢淡出烟花
+        cancelAnimationFrame(rafId);
+        // 等粒子自然消散
         setTimeout(() => {
-            canvas.style.opacity = '0';
-            overlay.style.opacity = '0'; // 恢复背景
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particles = [];
-        }, 2000);
+            canvas.style.opacity = '0';
+            document.body.classList.remove('night-mode');
+            bgm.pause();
+        }, 1500);
     }
 
-    function resetAndLoop() {
-        usedTexts = []; // 重置文案池，实现新一轮不重复
+    // 阶段3 → 新一轮：暂停结束，重播音乐+气泡
+    if (elapsed >= CONFIG.bubbleDuration + CONFIG.fireworkDuration + CONFIG.pauseDuration + 1.5) {
+        startTime = Date.now();
+        shuffledTexts = shuffle(TEXT_POOL);
+        textIndex = 0;
         bgm.currentTime = 0;
-        bgm.play();
+        bgm.play().catch(() => {});
         createBubble();
     }
 
-    // --- 启动监听 ---
-    startBtn.addEventListener('click', startJourney);
+    requestAnimationFrame(tick);
+}
 
+// ==================== 启动入口 ====================
+startBtn.addEventListener('click', () => {
+    startBtn.style.opacity = '0';
+    startBtn.style.pointerEvents = 'none';
+    setTimeout(() => startBtn.style.display = 'none', 300);
+
+    bgm.volume = 0.6;
+    bgm.play().catch(e => console.log('Safari autoplay blocked:', e));
+
+    shuffledTexts = shuffle(TEXT_POOL);
+    textIndex = 0;
+    isRunning = true;
+    startTime = Date.now();
+    createBubble();
+    requestAnimationFrame(tick);
+});
 </script>
 </body>
 </html>
