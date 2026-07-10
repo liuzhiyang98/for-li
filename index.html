@@ -5,83 +5,151 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>💌 To 利利</title>
     <style>
+        /* --- 核心基础设置 --- */
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
             background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 100%);
             height: 100vh; width: 100vw;
-            overflow: hidden;
-            font-family: "Microsoft YaHei", sans-serif;
+            overflow: hidden; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             position: relative;
-            user-select: none; -webkit-user-select: none;
-            touch-action: manipulation; /* ✅ Safari 关键优化 */
-            -webkit-tap-highlight-color: transparent;
+            transition: background 1s ease; /* 背景平滑变暗 */
         }
-        /* --- 开场遮罩层 --- */
-        #start-screen {
-            position: fixed; inset: 0;
-            background: rgba(255, 240, 243, 0.98);
+
+        /* 夜间模式类（烟花触发时添加） */
+        body.night-mode {
+            background: #0f0c29; 
+            background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+        }
+
+        /* --- 交互按钮区域 --- */
+        .start-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
             z-index: 9999;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            transition: opacity 0.8s ease, visibility 0.8s;
+            background: rgba(255,255,255,0.6);
+            backdrop-filter: blur(5px);
+            transition: opacity 0.8s ease;
         }
-        #start-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        .start-title {
-            font-size: 24px; color: #d66d7e;
-            margin-bottom: 30px; font-weight: bold;
-            text-align: center; padding: 0 20px; line-height: 1.5;
-        }
+        
         .start-btn {
-            padding: 16px 44px;
-            background: linear-gradient(45deg, #ff9a9e, #fad0c4);
-            color: white; border: none; border-radius: 50px;
-            font-size: 18px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255,154,158,0.4);
+            padding: 15px 40px;
+            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            border: none; border-radius: 50px;
+            color: white; font-size: 1.2rem; font-weight: bold;
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+            cursor: pointer;
+            transform: scale(1);
+            transition: transform 0.2s;
+            outline: none;
             -webkit-tap-highlight-color: transparent;
         }
         .start-btn:active { transform: scale(0.95); }
-        /* --- 气泡 & 烟花 & 音乐按钮 (样式不变) --- */
-        #bubble-container { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+
+        /* --- 气泡容器与样式 --- */
+        #bubble-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* 让点击穿透 */
+            z-index: 10;
+        }
+
         .bubble {
             position: absolute;
-            background: rgba(255,255,255,0.7);
-            backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
-            border-radius: 20px; padding: 8px 16px;
-            color: #d66d7e; font-size: 14px; white-space: nowrap;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            opacity: 0; transform: translateY(20px) scale(0.8);
-            transition: opacity 1s ease, transform 1s ease;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.4;
+            color: #555;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            opacity: 0;
+            transform: translateY(20px) scale(0.9);
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            max-width: 80%;
+            word-wrap: break-word;
+            backdrop-filter: blur(4px); /* 磨砂玻璃感 */
+            will-change: transform, opacity; /* 硬件加速 */
         }
-        .bubble.show { opacity: 1; transform: translateY(0) scale(1); }
-        #fireworks-canvas { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
-        .music-btn {
-            position: absolute; top: 20px; right: 20px;
-            width: 36px; height: 36px; z-index: 100;
-            opacity: 0; pointer-events: none; transition: opacity 0.5s; cursor: pointer;
+
+        /* 左侧气泡（模拟对方/世界） */
+        .bubble.left {
+            left: 20px;
+            background: rgba(255, 255, 255, 0.85);
+            border-bottom-left-radius: 4px;
+            color: #444;
         }
-        .music-btn.active { opacity: 0.8; pointer-events: auto; }
-        .music-btn svg { fill: #d66d7e; width: 100%; height: 100%; animation: spin 3s linear infinite paused; }
-        .music-btn.playing svg { animation-play-state: running; }
+        
+        /* 右侧气泡（模拟你/利利） */
+        .bubble.right {
+            right: 20px;
+            background: rgba(255, 230, 230, 0.9);
+            border-bottom-right-radius: 4px;
+            color: #d6336c;
+            text-align: right;
+        }
+
+        @keyframes popIn {
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* 离场动画：向上飘散 */
+        .bubble.fly-away {
+            transition: all 1.2s ease-in !important;
+            transform: translateY(-100vh) scale(0.5) rotate(10deg) !important;
+            opacity: 0 !important;
+        }
+
+        /* --- 烟花 Canvas --- */
+        #canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 5; /* 在气泡下面，但在背景上面 */
+            display: block;
+            pointer-events: none;
+        }
+
+        /* --- 音乐控制 --- */
+        .music-control {
+            position: absolute;
+            top: 20px; right: 20px;
+            width: 30px; height: 30px;
+            z-index: 100;
+            opacity: 0.6;
+            animation: spin 4s linear infinite;
+        }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+
     </style>
 </head>
 <body>
-    <!-- ✅ Safari 触摸补丁：强制唤醒事件链 -->
-    <script>document.body.addEventListener('touchstart', function(){}, {passive:true});</script>
 
-    <div id="start-screen">
-        <div class="start-title">利利点开你的专属惊喜 ✨</div>
-        <button class="start-btn" id="startBtn">开启旅程</button>
+    <!-- 音乐图标 (SVG) -->
+    <div class="music-control" id="musicIcon">
+        <svg viewBox="0 0 24 24" fill="#ff6b81"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
     </div>
+
+    <!-- 开始按钮 -->
+    <div class="start-container" id="startScreen">
+        <button class="start-btn" id="startBtn">💌 点击接收信件</button>
+    </div>
+
+    <!-- 气泡层 -->
     <div id="bubble-container"></div>
-    <canvas id="fireworks-canvas"></canvas>
-    <div class="music-btn" id="musicBtn">
-        <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-    </div>
-    <!-- ✅ 注意：这里故意不放 src，由 JS 动态赋值，绕过 Safari 预检 -->
-    <audio id="bgm" loop preload="none"></audio>
+
+    <!-- 烟花层 -->
+    <canvas id="canvas"></canvas>
+
+    <!-- 音频源 (建议替换为你自己的mp3链接，或者使用这个稳定的外链) -->
+   <audio id="bgm" loop preload="auto">
+        <source src="./mailien.mp3" type="audio/mpeg">
+    </audio>
+
 
 <script>
+    // --- 配置区 ---
     const messages = [
         "你是我的小确幸 💜", "世界很大，我的眼里只有你 👀", 
         "记得按时吃饭呀 🍱", "利利，我想你了 💕", 
@@ -98,116 +166,210 @@
         "期待和利利见面 ✨"
     ];
 
-    // ✅ GitHub Pages 必须用 https 协议相对路径或绝对 https
-    const MUSIC_URL = './mailien.mp3';
-
-    const container = document.getElementById('bubble-container');
-    const startScreen = document.getElementById('start-screen');
-    const musicBtn = document.getElementById('musicBtn');
+    const bubbleContainer = document.getElementById('bubble-container');
+    const startScreen = document.getElementById('startScreen');
+    const startBtn = document.getElementById('startBtn');
     const bgm = document.getElementById('bgm');
-    let isPlaying = false;
-    let hasStarted = false;
+    const musicIcon = document.getElementById('musicIcon');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
 
-    // ✅ 核心：动态设置音频源 + 超时保护
-    function safePlayAudio() {
-        return new Promise((resolve) => {
-            bgm.src = MUSIC_URL;
-            bgm.load();
-            const playPromise = bgm.play();
-            
-            // 300ms 超时保护：Safari 如果卡住，直接放弃
-            const timeout = setTimeout(() => resolve(false), 300);
-            
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    clearTimeout(timeout);
-                    resolve(true);
-                }).catch(() => {
-                    clearTimeout(timeout);
-                    resolve(false);
-                });
-            }
+    let isFireworksActive = false;
+    let particles = [];
+    let bubbles = []; // 存储当前的DOM气泡元素
+
+    // --- 1. 初始化与事件监听 ---
+    
+    // 解决 iOS Safari 触摸延迟和音频自动播放限制
+    document.addEventListener('touchstart', function() {}, {passive: true});
+
+    startBtn.addEventListener('click', () => {
+        // 1. 尝试播放音乐
+        playMusic();
+        
+        // 2. 隐藏开始界面
+        startScreen.style.opacity = '0';
+        setTimeout(() => { startScreen.style.display = 'none'; }, 800);
+
+        // 3. 开始冒气泡
+        startBubbling();
+    });
+
+    function playMusic() {
+        bgm.volume = 0.5;
+        bgm.play().then(() => {
+            musicIcon.style.animationPlayState = 'running';
+        }).catch(e => {
+            console.log("Audio autoplay blocked, waiting for interaction");
+            musicIcon.style.animation = 'none';
+            musicIcon.style.opacity = '0.3';
         });
     }
 
-    async function startJourney() {
-        if (hasStarted) return;
-        hasStarted = true;
+    // --- 2. 气泡生成逻辑 (防重叠优化版) ---
 
-        // ✅ 第一步：立即切换界面（绝不等待音频）
-        startScreen.classList.add('hidden');
-        musicBtn.classList.add('active');
-        startBubbles();
-        setTimeout(startFireworksShow, 4 * 60 * 1000);
-
-        // ✅ 第二步：异步尝试播放音乐，失败也不影响任何功能
-        const played = await safePlayAudio();
-        if (played) {
-            isPlaying = true;
-            musicBtn.classList.add('playing');
-        } else {
-            console.log('Safari 拦截了自动播放，用户可手动点击音乐图标');
-        }
+    function startBubbling() {
+        let count = 0;
+        const maxBubbles = 30; // 手机上不要太多，30个足够营造氛围且不卡
+        
+        const interval = setInterval(() => {
+            if (count >= maxBubbles) {
+                clearInterval(interval);
+                // 气泡发完后，等待几秒自动放烟花，或者你可以加个按钮
+                setTimeout(triggerGrandFinale, 2000); 
+                return;
+            }
+            createBubble();
+            count++;
+        }, 400); // 每0.4秒弹一个
     }
 
-    // 双重事件绑定
-    const startBtn = document.getElementById('startBtn');
-    startBtn.addEventListener('click', startJourney);
-    startBtn.addEventListener('touchend', (e) => { e.preventDefault(); startJourney(); });
-
-    // 音乐手动控制
-    async function toggleMusic() {
-        if (isPlaying) {
-            bgm.pause();
-            musicBtn.classList.remove('playing');
-            isPlaying = false;
-        } else {
-            if (!bgm.src) bgm.src = MUSIC_URL;
-            try {
-                await bgm.play();
-                musicBtn.classList.add('playing');
-                isPlaying = true;
-            } catch(e) { console.log('手动播放也被拦截'); }
-        }
-    }
-    musicBtn.addEventListener('click', toggleMusic);
-    musicBtn.addEventListener('touchend', (e) => { e.preventDefault(); toggleMusic(); });
-
-    // 气泡生成
-    function startBubbles() {
-        for (let i = 0; i < 12; i++) setTimeout(createBubble, i * 120);
-        setInterval(createBubble, 1500);
-    }
     function createBubble() {
-        const b = document.createElement('div');
-        b.className = 'bubble';
-        b.innerText = messages[Math.floor(Math.random() * messages.length)];
-        b.style.left = (Math.random() * 85 + 5) + '%';
-        b.style.top = (Math.random() * 85 + 5) + '%';
-        const colors = ['#ff9a9e','#fad0c4','#a18cd1','#fbc2eb','#8fd3f4'];
-        b.style.border = `1px solid ${colors[Math.floor(Math.random()*colors.length)]}`;
-        container.appendChild(b);
-        requestAnimationFrame(() => b.classList.add('show'));
-        while (container.children.length > 50) container.removeChild(container.firstElementChild);
+        const text = messages[Math.floor(Math.random() * messages.length)];
+        const div = document.createElement('div');
+        div.className = `bubble ${Math.random() > 0.5 ? 'left' : 'right'}`;
+        div.innerText = text;
+        
+        // 随机垂直位置，但避免太靠边
+        const topPos = 10 + Math.random() * 70; 
+        div.style.top = topPos + '%';
+        
+        // 随机微调左右位置，增加自然感
+        const randomOffset = (Math.random() * 10 - 5) + '%';
+        if(div.classList.contains('left')) {
+             div.style.left = `calc(20px + ${randomOffset})`;
+        } else {
+             div.style.right = `calc(20px - ${randomOffset})`;
+        }
+
+        // 随机层级，保证新出来的在上面
+        div.style.zIndex = Math.floor(Math.random() * 10);
+
+        bubbleContainer.appendChild(div);
+        bubbles.push(div);
+
+        // 限制屏幕上的气泡数量，防止手机卡顿
+        if (bubbles.length > 20) {
+            const oldBubble = bubbles.shift();
+            oldBubble.remove();
+        }
     }
 
-    // 烟花引擎（保持不变）
-    function startFireworksShow() {
-        const canvas = document.getElementById('fireworks-canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        let particles = [], active = true;
-        class P {
-            constructor(x,y,c){this.x=x;this.y=y;this.color=c;const a=Math.random()*Math.PI*2,s=Math.random()*5+2;this.vx=Math.cos(a)*s;this.vy=Math.sin(a)*s;this.alpha=1;this.decay=Math.random()*0.015+0.008;}
-            update(){this.x+=this.vx;this.y+=this.vy;this.vy+=0.04;this.alpha-=this.decay;}
-            draw(){ctx.globalAlpha=this.alpha;ctx.fillStyle=this.color;ctx.beginPath();ctx.arc(this.x,this.y,2.5,0,Math.PI*2);ctx.fill();}
-        }
-        function explode(){const x=Math.random()*canvas.width,y=Math.random()*canvas.height*0.6,h=Math.random()*360;for(let i=0;i<50;i++)particles.push(new P(x,y,`hsl(${h},100%,60%)`));}
-        function loop(){if(!active&&particles.length===0)return;ctx.clearRect(0,0,canvas.width,canvas.height);if(active&&Math.random()<0.12)explode();for(let i=particles.length-1;i>=0;i--){particles[i].update();particles[i].draw();if(particles[i].alpha<=0)particles.splice(i,1);}requestAnimationFrame(loop);}
-        loop();
-        setTimeout(()=>{active=false;},48000);
+    // --- 3. 终极烟花逻辑 (物理引擎版) ---
+
+    function triggerGrandFinale() {
+        if(isFireworksActive) return;
+        isFireworksActive = true;
+
+        // A. 切换黑夜模式
+        document.body.classList.add('night-mode');
+
+        // B. 气泡华丽退场
+        bubbles.forEach(b => b.classList.add('fly-away'));
+        setTimeout(() => {
+            bubbleContainer.innerHTML = ''; // 彻底清除DOM，释放内存给Canvas
+        }, 1200);
+
+        // C. 调整Canvas尺寸并开始循环
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        loopFireworks();
+
+        // D. 自动发射几波大的
+        let launches = 0;
+        const launchInterval = setInterval(() => {
+            launchRocket();
+            launches++;
+            if(launches > 15) clearInterval(launchInterval); // 发射15波后停止自动发射，改为点击发射
+        }, 800);
+        
+        // E. 允许用户点击屏幕继续放烟花
+        document.addEventListener('click', (e) => {
+            // 排除点击音乐图标的情况
+            if(e.target.closest('.music-control')) return;
+            launchRocket(e.clientX, e.clientY);
+        });
+        
+        // 兼容触摸
+        document.addEventListener('touchstart', (e) => {
+             if(e.target.closest('.music-control')) return;
+             const touch = e.touches[0];
+             launchRocket(touch.clientX, touch.clientY);
+        });
     }
-    window.addEventListener('resize',()=>{const c=document.getElementById('fireworks-canvas');c.width=window.innerWidth;c.height=window.innerHeight;});
-</script>
-</body>
-</html>
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    // 粒子类
+    class Particle {
+        constructor(x, y, hue) {
+            this.x = x;
+            this.y = y;
+            // 爆炸速度
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 5 + 2; 
+            this.vx = Math.cos(angle) * speed;
+            this.vy = Math.sin(angle) * speed;
+            
+            this.hue = hue + Math.random() * 30 - 15; // 颜色微调
+            this.brightness = Math.random() * 30 + 50;
+            this.alpha = 1;
+            this.decay = Math.random() * 0.015 + 0.005; // 衰减速度
+            
+            this.gravity = 0.05; // 重力
+            this.friction = 0.96; // 空气阻力
+        }
+
+        update() {
+            this.vx *= this.friction;
+            this.vy *= this.friction;
+            this.vy += this.gravity;
+            
+            this.x += this.vx;
+            this.y += this.vy;
+            this.alpha -= this.decay;
+        }
+
+        draw(ctx) {
+            ctx.globalCompositeOperation = 'lighter'; // 混合模式，让重叠部分发光
+            ctx.fillStyle = `hsla(${this.hue}, 100%, ${this.brightness}%, ${this.alpha})`;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // 烟花弹（升空阶段）
+    class Rocket {
+        constructor(targetX, targetY) {
+            this.x = canvas.width / 2;
+            this.y = canvas.height;
+            // 如果是点击触发的，从底部对应位置升起
+            if (targetX) this.x = targetX;
+            
+            this.targetX = targetX || Math.random() * canvas.width;
+            this.targetY = targetY || (canvas.height * 0.2 + Math.random() * canvas.height * 0.4);
+            
+            this.distanceToTarget = Math.sqrt(Math.pow(this.targetX - this.x, 2) + Math.pow(this.targetY - this.y, 2));
+            this.angle = Math.atan2(this.targetY - this.y, this.targetX - this.x);
+            this.speed = 12; // 升空速度
+            this.vx = Math.cos(this.angle) * this.speed;
+            this.vy = Math.sin(this.angle) * this.speed;
+            
+            this.hue = Math.random() * 360;
+            this.coordinates = [];
+            this.coordinateCount = 3; // 拖尾长度
+            while(this.coordinateCount--) {
+                this.coordinates.push([this.x, this.y]);
+            }
+        }
+
+        update(index) {
+            this.coordinates.pop();
+            this.coordinates.unshift([this.x, this.y]);
+            
+            this.vx *= 1.01; // 稍微加速
+            this.vy *=
