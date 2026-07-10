@@ -1,150 +1,159 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>💌 To 利利</title>
-<style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-        /* 保持你喜欢的粉色渐变背景 */
-        background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 50%, #e8f0fe 100%);
-        overflow: hidden; /* 禁止滚动，让气泡在屏幕内堆积 */
-        height: 100vh;
-        width: 100vw;
-        font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-        position: relative;
-        -webkit-tap-highlight-color: transparent;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>💌 To 利利</title>
+    <style>
+        /* 基础样式重置 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            /* 浪漫的粉色渐变背景 */
+            background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 50%, #e8f0fe 100%);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* 禁止滚动，让气泡铺满屏幕 */
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            position: relative;
+        }
 
-    /* 气泡的基础样式 */
-    .bubble {
-        position: absolute;
-        background: rgba(255, 255, 255, 0.85); /* 半透明白底 */
-        padding: 12px 20px;
-        border-radius: 25px; /* 圆角 */
-        color: #5d4e6d; /* 深紫色字体 */
-        font-size: 15px;
-        font-weight: 500;
-        box-shadow: 0 4px 15px rgba(255, 182, 193, 0.2); /* 淡淡的粉色阴影 */
-        white-space: nowrap; /* 不换行 */
-        opacity: 0; /* 初始不可见，为了做淡入效果 */
-        transform: scale(0.8);
-        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 弹性出现效果 */
-        z-index: 1;
-        backdrop-filter: blur(5px); /* 毛玻璃效果 */
-        border: 1px solid rgba(255, 255, 255, 0.6);
-    }
+        /* 右上角的音乐按钮样式 */
+        .music-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 100; /* 保证在最上层 */
+            cursor: pointer;
+            animation: spin 4s linear infinite; /* 旋转动画 */
+        }
+        .music-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: #333;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
 
-    /* 出现时的状态 */
-    .bubble.show {
-        opacity: 1;
-        transform: scale(1);
-    }
+        /* 聊天气泡的样式 */
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px 20px;
+            border-radius: 20px;
+            color: #4a4a4a;
+            font-size: 15px;
+            box-shadow: 0 4px 15px rgba(255, 182, 193, 0.2);
+            white-space: nowrap; /* 不换行 */
+            opacity: 0; /* 初始不可见 */
+            transform: scale(0.5); /* 初始很小 */
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 弹性动画效果 */
+            z-index: 10;
+        }
 
-    /* 音乐按钮（保留原图右上角的装饰） */
-    .music-btn {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        width: 40px;
-        height: 40px;
-        background: #fff;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        z-index: 100;
-        cursor: pointer;
-        font-size: 20px;
-    }
-</style>
+        /* 出现后的状态 */
+        .bubble.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+    </style>
 </head>
 <body>
 
-<!-- 右上角的音乐图标装饰 -->
-<div class="music-btn">🎵</div>
+    <!-- 音乐按钮 -->
+    <div class="music-btn" id="musicBtn">
+        <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+    </div>
 
-<script>
-    const messages = [
-        "你是我的小确幸 🍬",
+    <!-- 隐藏的音频标签 (请替换为你自己的mp3链接) -->
+    <audio id="bgm" loop>
+        <source src="https://music.163.com/song/media/outer/url?id=1824045033.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // --- 配置区域 ---
+        const messages = [
+            "你是我的小确幸 🍬",
         "世界很大，我的眼里只有你 👀",
         "记得按时吃饭呀 🍱",
         "利利，我想你了 💕",
         "麦莉恩这首歌送给利利 🎶",
         "利利是最特别的存在 🌟",
-        "今天也要开心哦 ☀️",
+        "今天也要开心哦 ☀",
         "想和你一起看星星 ✨",
         "你是我最喜欢的宝贝 🧸",
         "晚安，好梦 🌙",
-        "无论发生什么，我都在 🛡️",
+        "无论发生什么，我都在 🛡",
         "喜欢你笑的样子 😊"
-        "爱你三千遍 ❤️"
-        "不管发生什么我都在 🛡️"
+        "爱你三千遍 ❤"
+        "不管发生什么我都在 🛡"
         "世界很大，我的眼里只有你 👀"
         "期待和利利见面 ✨"
-    ];
+        ];
 
-    // 获取屏幕宽高
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
+        // --- 核心逻辑 ---
+        
+        // 1. 生成气泡的函数
+        function createBubble() {
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            
+            // 随机选取一句话
+            const text = messages[Math.floor(Math.random() * messages.length)];
+            bubble.innerText = text;
 
-    function createBubble() {
-        const bubble = document.createElement('div');
-        bubble.className = 'bubble';
+            // 随机位置计算 (避免太靠边被切掉)
+            // X轴：10% 到 80% 之间随机
+            const randomLeft = Math.floor(Math.random() * 70) + 10; 
+            // Y轴：10% 到 90% 之间随机
+            const randomTop = Math.floor(Math.random() * 80) + 10;
 
-        // 随机选取一句话
-        const text = messages[Math.floor(Math.random() * messages.length)];
-        bubble.innerText = text;
+            bubble.style.left = randomLeft + '%';
+            bubble.style.top = randomTop + '%';
 
-        // --- 核心逻辑：位置计算 ---
-        // 为了让它铺满且不重叠太严重，我们尽量随机分布
-        // 减去大概的气泡宽度(200)和高度(50)，防止溢出屏幕边缘
-        const randomX = Math.random() * (screenWidth - 150);
-        const randomY = Math.random() * (screenHeight - 100);
+            document.body.appendChild(bubble);
 
-        bubble.style.left = randomX + 'px';
-        bubble.style.top = randomY + 'px';
-
-        // 随机一点点大小变化，显得更自然
-        const scale = 0.9 + Math.random() * 0.2; // 0.9倍 到 1.1倍大小
-        // 注意：这里先不应用scale，等show类加上后再应用，配合CSS transition
-
-        document.body.appendChild(bubble);
-
-        // 强制重绘后添加 show 类，触发 CSS 里的弹跳动画
-        setTimeout(() => {
-            bubble.classList.add('show');
-            // 手动修正一下最终的大小，因为CSS里写死了scale(1)
-            // 如果想大小不一，可以在这里修改 style.transform
-            // bubble.style.transform = `scale(${scale})`;
-        }, 50);
-
-        // 关键点：这里没有任何代码去 remove(bubble)
-        // 所以它们会一直存在，直到页面被刷新或关闭。
-
-        // 检查气泡数量，如果太多（比如超过300个），为了防止手机卡死，
-        // 我们可以选择停止生成，或者移除最早的一个（可选）。
-        // 如果你想无限堆叠直到卡死，就把下面这几行删掉。
-        const allBubbles = document.querySelectorAll('.bubble');
-        if (allBubbles.length > 200) {
-           // 如果不想卡死手机，可以取消注释下面这行，它会移除最早的一个
-           // allBubbles[0].remove();
-           // 或者直接停止生成
-           // return;
+            // 稍微延迟一点点加class，触发CSS动画
+            setTimeout(() => {
+                bubble.classList.add('show');
+            }, 50);
         }
-    }
 
-    // --- 疯狂生成模式 ---
-    // 每 400毫秒 生成一个 (数字越小越快)
-    setInterval(createBubble, 400);
+        // 2. 启动循环
+        // 每 800毫秒 (0.8秒) 弹出一个新气泡
+        setInterval(createBubble, 800);
 
-    // 初始化先生成几个，免得刚开始太空
-    for(let i=0; i<5; i++) {
-        setTimeout(createBubble, i * 200);
-    }
+        // 3. 音乐控制逻辑
+        const musicBtn = document.getElementById('musicBtn');
+        const bgm = document.getElementById('bgm');
+        let isPlaying = false;
 
-</script>
+        musicBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                bgm.pause();
+                musicBtn.style.animationPlayState = 'paused'; // 停止旋转
+            } else {
+                bgm.play().catch(e => alert("请先点击屏幕任意位置激活音频权限"));
+                musicBtn.style.animationPlayState = 'running'; // 开始旋转
+            }
+            isPlaying = !isPlaying;
+        });
+
+        // 初始化先弹几个，避免刚进去太空
+        createBubble();
+        createBubble();
+        createBubble();
+
+    </script>
 </body>
 </html>
