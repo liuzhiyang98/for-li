@@ -11,92 +11,78 @@
             background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 100%);
             height: 100vh; width: 100vw;
             overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
             position: relative;
             transition: background 1.5s ease;
         }
-        body.night-mode {
-            background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
-        }
+        body.night-mode { background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e); }
 
-        /* --- 启动按钮 (像素级居中 + 呼吸光晕) --- */
+        /* --- 启动按钮 (绝对居中) --- */
         #start-btn {
-            position: absolute;
-            inset: 0;
-            margin: auto;
-            width: fit-content;
-            height: fit-content;
+            position: absolute; inset: 0; margin: auto;
+            width: fit-content; height: fit-content;
             padding: 22px 55px;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255,255,255,0.85);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255,255,255,0.9);
             border-radius: 60px;
-            color: #d6336c;
-            font-size: 20px;
-            font-weight: 700;
-            letter-spacing: 3px;
-            white-space: nowrap;
-            cursor: pointer;
-            z-index: 1000;
-            box-shadow: 0 0 0 0 rgba(214, 51, 108, 0.4), 0 10px 30px rgba(214, 51, 108, 0.2);
+            color: #d6336c; font-size: 20px; font-weight: 700;
+            letter-spacing: 3px; white-space: nowrap;
+            cursor: pointer; z-index: 1000;
+            box-shadow: 0 0 0 0 rgba(214,51,108,0.4), 0 10px 30px rgba(214,51,108,0.2);
             animation: breathe 2s ease-in-out infinite;
             transition: all 0.3s ease;
         }
         #start-btn:active { transform: scale(0.95); animation: none; }
         @keyframes breathe {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(214, 51, 108, 0.4), 0 10px 30px rgba(214, 51, 108, 0.2); }
-            50% { box-shadow: 0 0 0 15px rgba(214, 51, 108, 0), 0 10px 30px rgba(214, 51, 108, 0.3); }
+            0%,100% { box-shadow: 0 0 0 0 rgba(214,51,108,0.4), 0 10px 30px rgba(214,51,108,0.2); }
+            50% { box-shadow: 0 0 0 15px rgba(214,51,108,0), 0 10px 30px rgba(214,51,108,0.3); }
         }
 
-        /* --- 气泡容器 --- */
-        .bubble-container {
+        /* --- 全屏气泡容器 --- */
+        .bubble-wall {
             position: absolute; inset: 0;
-            padding: 60px 15px 30px;
-            display: flex; flex-direction: column; justify-content: flex-end;
-            gap: 10px;
             pointer-events: none; z-index: 10;
             overflow: hidden;
+            transition: opacity 1s ease;
         }
+        /* 烟花阶段气泡变淡，让出视觉焦点 */
+        .bubble-wall.dimmed { opacity: 0.15; }
+
+        /* --- 气泡样式 (全屏随机分布) --- */
         .bubble {
-            max-width: 78%; padding: 12px 18px;
-            border-radius: 22px; font-size: 15px; line-height: 1.6;
-            opacity: 0; transform: translateY(15px) scale(0.95);
-            animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-            word-wrap: break-word;
-            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-        }
-        /* 左侧 = 利利的回应 */
-        .bubble.left {
-            align-self: flex-start;
-            background: rgba(255, 255, 255, 0.88);
-            color: #444; border-bottom-left-radius: 6px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-        }
-        /* 右侧 = 你对利利说的情话 */
-        .bubble.right {
-            align-self: flex-end;
+            position: absolute;
+            padding: 10px 16px;
+            border-radius: 20px;
+            font-size: 14px; line-height: 1.5;
+            color: #fff;
             background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-            color: #fff; border-bottom-right-radius: 6px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.08);
-            box-shadow: 0 2px 12px rgba(255, 154, 158, 0.25);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(255,154,158,0.3);
+            max-width: 70%; word-wrap: break-word;
+            opacity: 0; transform: scale(0.8);
+            animation: fadeInPop 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
         }
-        @keyframes popIn { to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes fadeInPop { to { opacity: 1; transform: scale(1); } }
+
+        /* 消失动画 */
         .bubble.vanish {
-            transition: all 0.8s ease-in !important;
-            opacity: 0 !important; transform: translateY(-40px) scale(0.8) !important;
+            transition: all 1s ease-in !important;
+            opacity: 0 !important; transform: scale(0.5) !important;
         }
 
         /* --- 烟花画布 --- */
         #fireworks-canvas {
             position: absolute; inset: 0;
-            z-index: 5; pointer-events: none;
+            z-index: 20; pointer-events: none;
             opacity: 0; transition: opacity 1.2s ease;
         }
     </style>
 </head>
 <body>
     <div id="start-btn">💌 开启我们的故事</div>
-    <div class="bubble-container" id="bubble-area"></div>
+    <div class="bubble-wall" id="bubble-wall"></div>
     <canvas id="fireworks-canvas"></canvas>
     <!-- ⚠️ 请替换为你的真实 MP3 链接 -->
     <audio id="bgm" loop preload="auto">
@@ -104,223 +90,112 @@
     </audio>
 
 <script>
-// ==================== 对话库：你说 → 利利回应 ====================
-// 每组 [你的情话, 利利的肯定回应]，共150组 = 300条消息
-const DIALOGUES = [
-    ["利利，每天都要开心哦😊", "嗯嗯！有你在每天都会开心的🥰"],
-    ["记得按时吃饭呀🍱", "知道啦～你也要好好吃饭哦💕"],
-    ["今天也要元气满满💪", "收到！我们一起加油✨"],
-    ["早点休息别熬夜🌙", "好～你也早点睡，晚安🌙"],
-    ["多喝水照顾好自己💧", "遵命！你也是哦🫶"],
-    ["出门记得带伞☂️", "嗯嗯，你放心好啦🌂"],
-    ["天冷了多穿点🧣", "知道啦，心里暖暖的🥰"],
-    ["累了就歇一歇🫂", "好～想到你就不累了💖"],
-    ["想你了💭", "我也在想你呀💕"],
-    ["在干嘛呢👀", "在想一个很特别的人😏"],
-    ["有没有好好吃饭🍚", "有呀！你呢？🍜"],
-    ["今天过得怎么样🌈", "看到你消息就变得很好了✨"],
-    ["看到你消息就安心了💕", "我也是，有你真好🥰"],
-    ["你的笑容是我今天的能量✨", "那你多看几眼呀😆"],
-    ["晚安好梦🌙", "晚安～梦里见💫"],
-    ["早安我的宝☀️", "早安呀！新的一天也要开心🌞"],
-    ["你是我每天醒来的理由🌅", "你是我每天入睡的期待🌙"],
-    ["想你想到睡不着🥺", "那我陪你聊到困好不好💬"],
-    ["梦里都是你💫", "因为白天也全是你呀😘"],
-    ["醒来第一个想到的就是你❤️", "我也是！睁眼就想找你💕"],
-    ["你是我的小确幸💜", "你是我的大幸运🌟"],
-    ["遇见你真好🥰", "遇见你是我这辈子最好的事💖"],
-    ["有你在我就很踏实🛡️", "我会一直在你身边的🤝"],
-    ["你是我的安心丸💊", "你是我的快乐源泉🎉"],
-    ["喜欢你笑的样子😊", "那我只对你笑好不好😁"],
-    ["你生气也可爱😤", "才不会对你生气呢🥺"],
-    ["你做什么我都支持🙌", "有你支持我就什么都不怕💪"],
-    ["你是最棒的🏆", "因为你才变得更好的呀✨"],
-    ["抱抱你🫂", "紧紧抱住不放！🤗"],
-    ["亲亲你😘", "回亲一个！么么哒💋"],
-    ["牵你的手不想放🤝", "那就一直牵着呀🔗"],
-    ["想把你藏进口袋🧸", "那我乖乖待着不出来😆"],
-    ["你是我最喜欢的🐷", "你也是我最最最喜欢的💗"],
-    ["你是我的宝贝👶", "你是我的全世界🌍"],
-    ["你是人间四月天🌸", "你是我的春夏秋冬🍂"],
-    ["你是我的春天🌷", "你是我的四季如春☀️"],
-    ["和你在一起时间过得好快⏰", "因为快乐的时间总是短暂的呀🥺"],
-    ["舍不得和你分开🥺", "那我们就不分开好不好💕"],
-    ["期待下次见面✨", "我也是！每天都在倒数📅"],
-    ["倒计时见面的日子📅", "每过一天就离你更近一步💫"],
-    ["你是我的心头肉💗", "你是我的掌中宝💎"],
-    ["你是我的掌上明珠💎", "你是我的无价之宝🏆"],
-    ["你是我的全世界🌍", "你就是我的整个宇宙🌌"],
-    ["你是我的一切🌟", "你是我生命中最重要的存在💖"],
-    ["爱你三千遍🏹", "我爱你直到永远♾️"],
-    ["爱你到永远♾️", "永远太短，我要爱你生生世世🔄"],
-    ["爱你不止今天📆", "每一天都比昨天更爱你📈"],
-    ["每一天都比昨天更爱你📈", "我对你的爱只增不减💗"],
-    ["你是我的私有浪漫🌹", "你是我独享的温柔🌸"],
-    ["连晚风都偏爱你🍃", "因为晚风知道我喜欢你呀🥰"],
-    ["想做你的避风港⛵", "你已经是我最好的港湾了🏠"],
-    ["你是我的未完待续📖", "我们的故事才刚刚开始📚"],
-    ["想把银河摘下来送你🌌", "你就是我的整片星空✨"],
-    ["你是我平淡生活里的刺眼光芒✨", "你是我黑暗世界里的唯一光源💡"],
-    ["心跳的频率是你💓", "我的脉搏为你而跳动💗"],
-    ["想和你虚度时光⏳", "和你在一起的每一秒都不算虚度💕"],
-    ["哪怕世界颠倒我也奔向你🏃", "无论多远我都会走向你🤝"],
-    ["你是我所有的不期而遇🎁", "你是我命中注定的相遇🎯"],
-    ["想做你的小朋友🧒", "我会一直宠着你呀🥰"],
-    ["想被你宠坏🥺", "那就让我把你宠上天吧😆"],
-    ["你是我的例外和偏爱💝", "你永远是我的第一选择✅"],
-    ["只对你一个人好🫵", "我也只对你一个人动心💘"],
-    ["利利是最特别的存在🌟", "因为有你我才特别呀💖"],
-    ["麦莉恩这首歌送给你🎵", "每一句歌词都是我想说的话🎶"],
-    ["世界很大眼里只有你👀", "我的视线从未离开过你💕"],
-    ["想和你一起看日落🌇", "还想和你一起看日出、看星星🌅"],
-    ["无论发生什么我都在🛡️", "我知道，所以我很安心🥰"],
-    ["你是我藏在心底的秘密🤫", "你是我最想公开的骄傲📢"],
-    ["见到你天气都变好了☀️", "因为你就是我的小太阳呀🌞"],
-    ["想把所有温柔都给你🌸", "你给我的温柔已经够多了💕"],
-    ["今天的风很甜像你一样🍬", "你比世界上所有的糖都甜🍯"],
-    ["你是我所有的少女情怀💕", "你是我全部的浪漫想象🌹"],
-    ["你是我最美的遇见🌺", "遇见你花光了我所有的运气🍀"],
-    ["余生请多指教🤝", "往后余生，请多多关照💑"],
-    ["愿与你共度余生💑", "这是我听过最美的情话💍"],
-    ["你是我一生的挚爱💍", "你是我此生不变的承诺🤞"],
-    ["非你不可🚫", "除了你我谁都不要🙅"],
-    ["除了你我谁都不想要🙅", "我的心里只装得下你一个人💗"],
-    ["你是唯一的选择✅", "你是我毫不犹豫的答案💯"],
-    ["命中注定是你🎯", "缘分早就把我们绑在一起了🔗"],
-    ["感谢命运安排🙏", "感谢让我在最对的时间遇到你✨"],
-    ["你是上天给我的礼物🎁", "我会用一辈子来珍惜这份礼物💎"],
-    ["珍惜和你的每一刻⏱️", "每一秒都值得被铭记📸"],
-    ["不想错过你🏃", "我不会让你有机会错过的🤝"],
-    ["害怕失去你😰", "你不会失去我的，我一直在💪"],
-    ["你是我的安全感🔒", "你是我最大的底气🛡️"],
-    ["你是我的归属感🏠", "有你的地方才是家🏡"],
-    ["灵魂深处是你🧠", "你住在我心里最深的地方💗"],
-    ["血液里流淌着对你的爱🩸", "爱你已经成了我的本能💓"],
-    ["呼吸间都是你的味道🌬️", "连空气都因为你变得甜美🌸"],
-    ["目光所及皆是你👁️", "我的眼里从来只有你💕"],
-    ["心之所向皆是你💘", "我的心永远朝着你的方向🧭"],
-    ["念念不忘是你🔄", "朝思暮想也都是你🌅"],
-    ["入骨相思是你💀", "刻骨铭心的爱只给你🗿"],
-    ["此生不换是你🔄", "来生还要找到你🔁"],
-    ["三生三世都是你🔄", "千秋万代也只认你一个🏛️"],
-    ["海枯石烂不变心🌊", "天荒地老也不离不弃🏔️"],
-    ["愿得一心人白首不相离👴", "执子之手与子偕老🤝"],
-    ["你是我的星辰大海🌊", "你是我的日月星辰🌙"],
-    ["你是我的春夏秋冬🍂", "你是我的东南西北🧭"],
-    ["你是我的过去现在未来⏳", "你是我的起点和终点🏁"],
-    ["你是我的因和果🔄", "你是我的问题和答案❓"],
-    ["你是我的诗和远方📜", "你是我的柴米油盐🍚"],
-    ["晓看天色暮看云行也思君坐也思君☁️", "我也是，无时无刻不在想你💭"],
-    ["玲珑骰子安红豆入骨相思知不知🎲", "我知道的，因为我也一样💕"],
-    ["山有木兮木有枝心悦君兮君不知🌳", "现在我知道了，而且我也心悦你💘"],
-    ["愿我如星君如月夜夜流光相皎洁🌙", "我们就是彼此的光✨"],
-    ["两情若是久长时又岂在朝朝暮暮💕", "但我还是想每天都见到你🥺"],
-    ["身无彩凤双飞翼心有灵犀一点通🦋", "我们的心一直是在一起的💗"],
-    ["在天愿作比翼鸟在地愿为连理枝🐦", "永远和你在一起，不分离🤝"],
-    ["此情可待成追忆只是当时已惘然💭", "现在的每一刻我都会好好珍惜💎"],
-    ["问世间情为何物直教生死相许💀", "你就是我生命的全部意义🌟"],
-    ["我会一直陪着你🤝", "我知道，有你在我就安心💕"],
-    ["我不会离开你🚫", "我也不允许你离开我🥺"],
-    ["我不会放弃你💪", "我们一起走下去，永不放弃🤝"],
-    ["我不会辜负你🙏", "你值得世界上最好的一切💎"],
-    ["我会保护你🛡️", "我也会守护你的💗"],
-    ["我会照顾你🫂", "我们互相照顾，一起变老👴"],
-    ["我会心疼你💗", "你心疼我的时候我更心疼你🥺"],
-    ["我会理解你🤝", "谢谢你总是懂我💕"],
-    ["我会包容你🫂", "在你面前我可以做真实的自己🥰"],
-    ["我会尊重你🙇", "你是我最敬重也最爱的人💖"],
-    ["我会信任你🤝", "我对你的信任毫无保留💯"],
-    ["我会支持你🙌", "你永远是我最大的后盾🛡️"],
-    ["我会鼓励你💪", "你已经很棒了，我相信你🏆"],
-    ["我会赞美你👏", "因为你本来就值得所有赞美🌟"],
-    ["我会欣赏你👀", "你身上的每一个闪光点我都看到了✨"],
-    ["我会珍惜你💎", "你是我最珍贵的宝藏🏆"],
-    ["我会呵护你🫂", "在你的怀里就是最安全的港湾🏠"],
-    ["我会疼爱你💕", "被你疼爱是最幸福的事🥰"],
-    ["我会宠溺你🥰", "那就让你宠我一辈子吧😆"],
-    ["我会满足你✅", "只要是你想要的，我都给💝"],
-    ["我会陪伴你🤝", "陪伴是最长情的告白💌"],
-    ["我会守候你⏳", "无论多久我都等你🧍"],
-    ["我会等待你🧍", "等你的时候也在好好爱自己💕"],
-    ["我会追寻你🏃", "不管你走到哪里我都会找到你🔍"],
-    ["我会拥抱你🫂", "最想做的事就是紧紧抱住你🤗"],
-    ["我会亲吻你😘", "每一次亲吻都是爱的印记💋"],
-    ["我会凝视你👁️", "怎么看都看不够😍"],
-    ["我会倾听你👂", "你说的每一句话我都认真听💬"],
-    ["我会回应你💬", "你的每一条消息我都会秒回⚡"],
-    ["我会记住你🧠", "关于你的一切我都刻在心里💗"],
-    ["我会想念你💭", "分开一秒就开始想了🥺"],
-    ["我会梦见你💫", "每晚都在梦里和你相见🌙"],
-    ["我会呼唤你📢", "你的名字是我最常说的词💕"],
-    ["我会寻找你🔍", "在人海中一眼就能认出你👀"],
-    ["我会发现你👀", "你的好我一直都看在眼里✨"],
-    ["我会选择你✅", "一万次选择都会是你💯"],
-    ["我会认定你🎯", "你就是我这辈子的唯一💍"],
-    ["我会坚持你💪", "爱你这件事我永远不会放弃🔥"],
-    ["我会守护你🛡️", "用我全部的力量守护你💪"],
-    ["我会捍卫你⚔️", "谁也不能伤害你🚫"],
-    ["我会维护你🔧", "你永远是对的😆"],
-    ["我会保全你🛡️", "你比我自己的安全更重要💗"],
-    ["我会成全你🙏", "你的梦想就是我的梦想🌟"],
-    ["我会成就你🏆", "我们一起变成更好的人📈"],
-    ["我会完善你🔧", "我们互相完善，共同成长🌱"],
-    ["我会提升你📈", "和你在一起我每天都在进步✨"],
-    ["我会优化你⚙️", "你已经是最完美的了🥰"],
-    ["我会美化你🎨", "你本身就是最美的艺术品🖼️"],
-    ["我会净化你🧹", "你的心灵比什么都纯净💎"],
-    ["我会升华你🚀", "我们的爱会越来越好📈"],
-    ["我会超越你🏃", "不是超越你，是和你一起超越自己💪"],
-    ["我会突破你🚧", "我们一起打破所有界限🌈"],
-    ["我会创新你💡", "每天给你不一样的惊喜🎁"],
-    ["我会改变你🔄", "因为你我已经变成了更好的人✨"],
-    ["我会影响你🌊", "好的影响是因为爱你呀💕"],
-    ["我会感化你❤️", "是你的温柔感化了我🥰"],
-    ["我会融化你🫠", "你的心早就被我融化了吧😆"],
-    ["我会温暖你☀️", "你是我的暖阳，我也要做你的🌞"],
-    ["我会照亮你💡", "我们是彼此的光✨"],
-    ["我会点燃你🔥", "你对生活的热情感染了我🔥"],
-    ["我会激发你⚡", "你激发了我对未来的所有期待🌟"],
-    ["我会唤醒你⏰", "是你唤醒了我心中沉睡的爱💗"],
-    ["我会启迪你💡", "你是我人生最好的导师📚"],
-    ["我会引领你🧭", "我们一起走，不分前后🤝"],
-    ["我会指导你📖", "我们互相学习，共同进步📚"],
-    ["我会教导你👨‍🏫", "你教会了我什么是真正的爱💕"],
-    ["我会培养你🌱", "我们的爱情在慢慢开花结果🌸"],
-    ["我会培育你🌿", "用心浇灌属于我们的花园🌺"],
-    ["我会浇灌你💧", "用爱和耐心滋养这段感情💗"],
-    ["我会施肥你🌱", "每天的关心就是最好的养分🌿"],
-    ["我会修剪你✂️", "帮你去掉烦恼，留下快乐😊"],
-    ["我会收获你🌾", "收获你是我最大的幸运🍀"],
-    ["我会珍藏你📦", "把你放在心底最珍贵的位置💎"],
-    ["我会展示你🖼️", "想让全世界都知道你有多好📢"],
-    ["我会分享你🤝", "你是我所有快乐的来源🎉"],
-    ["我会传播你📡", "把你的好告诉每一个人🌟"],
-    ["我会弘扬你📢", "你的美好值得被所有人看见✨"],
-    ["我会传承你🔄", "我们的爱会一直延续下去♾️"],
-    ["我会延续你♾️", "爱你，是我这辈子不会停下的事💕"]
+// ==================== 300句关心鼓励与爱意 ====================
+const LOVE_WORDS = [
+    // --- 日常关心篇 ---
+    "利利今天也要开心哦😊","记得按时吃饭呀🍱","多喝水照顾好自己💧",
+    "早点休息别熬夜🌙","天冷了多穿点🧣","出门记得带伞☂️",
+    "累了就歇一歇🫂","别给自己太大压力💆","心情不好就跟我说💬",
+    "你今天辛苦了✨","好好爱自己💕","别忘了微笑😊",
+    "愿你今天一切顺利🍀","注意安全哦🛡️","记得吃早餐🥐",
+    "晚上盖好被子🛏️","少看手机保护眼睛👀","适当运动身体好🏃",
+    "不开心了就吃点甜的🍰","深呼吸放松一下🌬️","你值得被温柔以待🌸",
+    "今天的你也很棒👏","允许自己偶尔偷懒😴","别太逞强了🥺",
+    "你的健康最重要💪","记得晒太阳补充能量☀️","保持好心情很重要🌈",
+
+    // --- 鼓励支持篇 ---
+    "我相信你可以的💪","你已经做得很好了🏆","别怕，有我在🛡️",
+    "每一步都算数👣","失败只是暂时的🔄","你的努力我都看到了👀",
+    "你是最勇敢的🦁","困难总会过去的🌅","你的潜力无限大🚀",
+    "为自己骄傲吧🎉","你比想象中更强大💎","坚持下去就有希望🌟",
+    "你的选择是对的✅","不要怀疑自己🙅","你值得所有美好🌺",
+    "慢慢来，不着急⏳","进步需要时间🌱","你的光芒挡不住✨",
+    "每一次尝试都有意义🎯","你是独一无二的🌟","世界因你而不同🌍",
+    "你的善良很珍贵💝","你的坚持让人敬佩🙇","未来可期🔮",
+    "你正在成为更好的自己📈","相信自己，你能行💯","你的梦想值得追求🌠",
+
+    // --- 深情爱意篇 ---
+    "爱你三千遍🏹","你是我的一切🌍","心里满满都是你💗",
+    "遇见你真好🥰","你是我的唯一💍","想和你共度余生💑",
+    "你是我生命中的光💡","爱你到永远♾️","你是我的宝贝👶",
+    "只想对你一个人好🫵","你是我的心头肉💗","非你不可🚫",
+    "你是我的私有浪漫🌹","连晚风都偏爱你🍃","想做你的避风港⛵",
+    "你是我的未完待续📖","想把银河摘下来送你🌌","心跳的频率是你💓",
+    "哪怕世界颠倒我也奔向你🏃","你是我所有的不期而遇🎁","想做你的小朋友🧒",
+    "你是我的例外和偏爱💝","只对你一个人动心💘","利利是最特别的存在🌟",
+    "世界很大眼里只有你👀","无论发生什么我都在🛡️","见到你天气都变好了☀️",
+    "想把所有温柔都给你🌸","今天的风很甜像你一样🍬","你是我所有的少女情怀💕",
+    "余生请多指教🤝","愿与你白首不相离👴","执子之手与子偕老🤝",
+    "你是我的星辰大海🌊","你是我的春夏秋冬🍂","你是我的起点和终点🏁",
+    "我会一直陪着你🤝","我不会离开你🚫","我会保护你🛡️",
+    "我会珍惜你💎","我会呵护你🫂","我会疼爱你💕",
+    "陪伴是最长情的告白💌","你的名字是我最爱说的词💕","分开一秒就开始想了🥺",
+    "每晚都在梦里和你相见🌙","在人海中一眼就能认出你👀","一万次选择都会是你💯",
+    "爱你这件事永远不会停💕","你是我这辈子的唯一💍","用全部的力量守护你💪",
+    "你的快乐就是我的快乐🎉","你的眼泪让我心疼💧","你的笑容治愈一切🌞",
+    "你是我的安心丸💊","你是我的归属感🏠","有你的地方才是家🏡",
+    "灵魂深处是你🧠","呼吸间都是你的味道🌬️","目光所及皆是你👁️",
+    "心之所向皆是你💘","念念不忘是你🔄","朝思暮想是你🌅",
+    "入骨相思是你💀","刻骨铭心是你🗿","此生不换是你🔄",
+    "来生还要找到你🔁","海枯石烂不变心🌊","天荒地老不离弃🏔️",
+    "你是我的诗和远方📜","你是我的柴米油盐🍚","你是我的阳春白雪❄️",
+    "你是我的高山流水🏔️","你是我的知音知己🎼","你是我的爱人伴侣💑",
+    "你是小可爱本爱🥰","你是仙女下凡🧚","你是天使降临👼",
+    "你是公主殿下👸","你是我的女王大人👑","你是我的老板我听你的🫡",
+    "你是我的太阳温暖我☀️","你是我的月亮陪伴我🌙","你是我的星星点缀我⭐",
+    "你是花朵芬芳我🌺","你是清泉滋润我💧","你是微风轻抚我🍃",
+    "你是彩虹惊艳我🌈","你是烟火绚烂我🎆","你是糖果甜蜜我🍬",
+    "你是蛋糕柔软我🍰","你是奶茶醇厚我🧋","你是冰淇淋凉爽我🍦",
+    "你是巧克力丝滑我🍫","你是棉花糖蓬松我☁️","你是果冻Q弹我🍮",
+    "你是苹果平安我🍎","你是橙子心想事成我🍊","你是草莓甜美我🍓",
+    "你是西瓜解渴我🍉","你是桃子长寿我🍑","你是樱桃珍贵我🍒",
+    "晓看天色暮看云行也思君☁️","玲珑骰子安红豆入骨相思🎲",
+    "山有木兮心悦君兮🌳","愿我如星君如月夜夜流光🌙",
+    "两情若是久长时💕","身无彩凤心有灵犀🦋","在天愿作比翼鸟🐦",
+    "此情可待成追忆💭","问世间情为何物💀","曾经沧海难为水☁️",
+    "衣带渐宽终不悔👔","众里寻他千百度🏮","人生若只如初见🍂",
+    "我会拥抱你🫂","我会亲吻你😘","我会凝视你👁️",
+    "我会倾听你👂","我会回应你💬","我会记住你🧠",
+    "我会想念你💭","我会梦见你💫","我会呼唤你📢",
+    "我会寻找你🔍","我会发现你👀","我会选择你✅",
+    "我会认定你🎯","我会坚持你💪","我会守护你🛡️",
+    "我会捍卫你⚔️","我会维护你🔧","我会保全你🛡️",
+    "我会成全你🙏","我会成就你🏆","我会完善你🔧",
+    "我会提升你📈","我会优化你⚙️","我会美化你🎨",
+    "我会净化你🧹","我会升华你🚀","我会超越你🏃",
+    "我会突破你🚧","我会创新你💡","我会改变你🔄",
+    "我会影响你🌊","我会感化你❤️","我会融化你🫠",
+    "我会温暖你☀️","我会照亮你💡","我会点燃你🔥",
+    "我会激发你⚡","我会唤醒你⏰","我会启迪你💡",
+    "我会引领你🧭","我会指导你📖","我会教导你👨‍🏫",
+    "我会培养你🌱","我会培育你🌿","我会浇灌你💧",
+    "我会施肥你🌱","我会修剪你✂️","我会收获你🌾",
+    "我会珍藏你📦","我会展示你🖼️","我会分享你🤝",
+    "我会传播你📡","我会弘扬你📢","我会传承你🔄","我会延续你♾️"
 ];
 
 // ==================== 配置区 ====================
 const CONFIG = {
-    bubbleDuration: 240,   // 气泡阶段时长(秒) = 4分钟
-    fireworkDuration: 48,  // 烟花持续时长(秒)
-    pauseDuration: 10,     // 音乐暂停时长(秒)
-    spawnRate: 800         // 气泡生成间隔(ms)
+    bubbleDuration: 240,   // 气泡阶段(秒)
+    fireworkDuration: 48,  // 烟花时长(秒)
+    pauseDuration: 10,     // 暂停时长(秒)
+    spawnRate: 700,        // 气泡生成间隔(ms)
+    maxBubbles: 60         // 屏幕最大气泡数(防遮挡烟花)
 };
 
 // ==================== 全局状态 ====================
-let shuffledDialogues = [];
-let dialogueIndex = 0;
+let shuffledWords = [];
+let wordIndex = 0;
 let isRunning = false;
 let startTime = 0;
 let rafId = null;
 let bubbleTimer = null;
-let replyTimer = null;
+let musicEnded = false; // 标记音乐是否在烟花结束时已暂停
 
 // DOM
 const startBtn = document.getElementById('start-btn');
 const bgm = document.getElementById('bgm');
-const bubbleArea = document.getElementById('bubble-area');
+const bubbleWall = document.getElementById('bubble-wall');
 const canvas = document.getElementById('fireworks-canvas');
 const ctx = canvas.getContext('2d');
 
@@ -334,48 +209,49 @@ function shuffle(arr) {
     return a;
 }
 
-// ==================== 对话式气泡系统 ====================
-function createDialoguePair() {
+function getNextWord() {
+    if (wordIndex >= shuffledWords.length) {
+        shuffledWords = shuffle(LOVE_WORDS);
+        wordIndex = 0;
+    }
+    return shuffledWords[wordIndex++];
+}
+
+// ==================== 全屏气泡系统 ====================
+function createBubble() {
     if (!isRunning) return;
 
-    if (dialogueIndex >= shuffledDialogues.length) {
-        shuffledDialogues = shuffle(DIALOGUES);
-        dialogueIndex = 0;
+    const currentCount = bubbleWall.children.length;
+    
+    // 达到上限后不再新增，但保持现有气泡
+    if (currentCount < CONFIG.maxBubbles) {
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        b.innerText = getNextWord();
+
+        // 随机位置（避开边缘）
+        const top = 5 + Math.random() * 85;
+        const left = 5 + Math.random() * 85;
+        b.style.top = top + '%';
+        b.style.left = left + '%';
+
+        // 随机大小变化增加层次感
+        const scale = 0.8 + Math.random() * 0.4;
+        b.style.fontSize = (14 * scale) + 'px';
+        b.style.zIndex = Math.floor(Math.random() * 10);
+
+        bubbleWall.appendChild(b);
     }
 
-    const [myLine, replyLine] = shuffledDialogues[dialogueIndex++];
-
-    // 先显示你的情话（右侧）
-    const myBubble = document.createElement('div');
-    myBubble.className = 'bubble right';
-    myBubble.innerText = myLine;
-    bubbleArea.appendChild(myBubble);
-
-    // 延迟后显示利利的回应（左侧）
-    replyTimer = setTimeout(() => {
-        if (!isRunning) return;
-        const replyBubble = document.createElement('div');
-        replyBubble.className = 'bubble left';
-        replyBubble.innerText = replyLine;
-        bubbleArea.appendChild(replyBubble);
-
-        // 保持屏幕内最多10条
-        while (bubbleArea.children.length > 10) {
-            bubbleArea.removeChild(bubbleArea.firstChild);
-        }
-    }, 600 + Math.random() * 400);
-
-    // 下一组对话
-    const next = CONFIG.spawnRate + (Math.random() * 400 - 200);
-    bubbleTimer = setTimeout(createDialoguePair, next + 700);
+    const next = CONFIG.spawnRate + (Math.random() * 300 - 150);
+    bubbleTimer = setTimeout(createBubble, next);
 }
 
 function clearBubbles() {
     clearTimeout(bubbleTimer);
-    clearTimeout(replyTimer);
-    const bs = bubbleArea.querySelectorAll('.bubble');
-    bs.forEach((b, i) => setTimeout(() => b.classList.add('vanish'), i * 40));
-    setTimeout(() => { bubbleArea.innerHTML = ''; }, 1200);
+    const bs = bubbleWall.querySelectorAll('.bubble');
+    bs.forEach((b, i) => setTimeout(() => b.classList.add('vanish'), i * 30));
+    setTimeout(() => { bubbleWall.innerHTML = ''; }, 1500);
 }
 
 // ==================== 烟花引擎 ====================
@@ -432,7 +308,10 @@ function animateFireworks() {
     ctx.globalCompositeOperation = 'lighter';
 
     if (fireworksActive && Math.random() < 0.08) {
-        explode(Math.random() * canvas.width, Math.random() * canvas.height * 0.5 + canvas.height * 0.1);
+        explode(
+            Math.random() * canvas.width,
+            Math.random() * canvas.height * 0.5 + canvas.height * 0.1
+        );
     }
 
     for (let i = particles.length - 1; i >= 0; i--) {
@@ -448,33 +327,46 @@ function tick() {
     if (!isRunning) return;
     const elapsed = (Date.now() - startTime) / 1000;
 
+    // ✅ 阶段1→2：气泡结束，烟花开始，音乐继续播放
     if (elapsed >= CONFIG.bubbleDuration && !fireworksActive && particles.length === 0) {
         clearBubbles();
+        bubbleWall.classList.add('dimmed');
         document.body.classList.add('night-mode');
         canvas.style.opacity = '1';
         fireworksActive = true;
+        musicEnded = false; // 重置标记
         animateFireworks();
     }
 
+    // ✅ 阶段2→3：烟花结束，音乐暂停（只执行一次）
     if (elapsed >= CONFIG.bubbleDuration + CONFIG.fireworkDuration && fireworksActive) {
         fireworksActive = false;
         cancelAnimationFrame(rafId);
+        
+        // 立即暂停音乐
+        if (!musicEnded) {
+            bgm.pause();
+            musicEnded = true;
+        }
+
         setTimeout(() => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particles = [];
             canvas.style.opacity = '0';
             document.body.classList.remove('night-mode');
-            bgm.pause();
+            bubbleWall.classList.remove('dimmed');
         }, 1500);
     }
 
+    // ✅ 阶段3→新一轮：暂停10秒后重播
     if (elapsed >= CONFIG.bubbleDuration + CONFIG.fireworkDuration + CONFIG.pauseDuration + 1.5) {
         startTime = Date.now();
-        shuffledDialogues = shuffle(DIALOGUES);
-        dialogueIndex = 0;
+        shuffledWords = shuffle(LOVE_WORDS);
+        wordIndex = 0;
+        musicEnded = false;
         bgm.currentTime = 0;
         bgm.play().catch(() => {});
-        createDialoguePair();
+        createBubble();
     }
 
     requestAnimationFrame(tick);
@@ -486,14 +378,16 @@ startBtn.addEventListener('click', () => {
     startBtn.style.pointerEvents = 'none';
     setTimeout(() => startBtn.style.display = 'none', 300);
 
+    // ✅ 点击即播放，loop=true 保证循环
+    bgm.loop = true;
     bgm.volume = 0.6;
     bgm.play().catch(e => console.log('Safari autoplay blocked:', e));
 
-    shuffledDialogues = shuffle(DIALOGUES);
-    dialogueIndex = 0;
+    shuffledWords = shuffle(LOVE_WORDS);
+    wordIndex = 0;
     isRunning = true;
     startTime = Date.now();
-    createDialoguePair();
+    createBubble();
     requestAnimationFrame(tick);
 });
 </script>
