@@ -6,7 +6,6 @@
     <title>💌 To 利利</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
         body {
             background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 100%);
             height: 100vh; width: 100vw;
@@ -14,11 +13,10 @@
             font-family: "Microsoft YaHei", sans-serif;
             position: relative;
             user-select: none; -webkit-user-select: none;
-            touch-action: none;
+            touch-action: manipulation; /* ✅ Safari 关键优化 */
             -webkit-tap-highlight-color: transparent;
         }
-
-        /* --- 开场遮罩层 (最高优先级) --- */
+        /* --- 开场遮罩层 --- */
         #start-screen {
             position: fixed; inset: 0;
             background: rgba(255, 240, 243, 0.98);
@@ -27,95 +25,63 @@
             justify-content: center; align-items: center;
             transition: opacity 0.8s ease, visibility 0.8s;
         }
-        #start-screen.hidden {
-            opacity: 0; visibility: hidden; pointer-events: none;
-        }
-
+        #start-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         .start-title {
             font-size: 24px; color: #d66d7e;
             margin-bottom: 30px; font-weight: bold;
-            text-align: center; padding: 0 20px;
-            line-height: 1.5;
+            text-align: center; padding: 0 20px; line-height: 1.5;
         }
-
         .start-btn {
             padding: 16px 44px;
             background: linear-gradient(45deg, #ff9a9e, #fad0c4);
             color: white; border: none; border-radius: 50px;
-            font-size: 18px; font-weight: bold;
-            cursor: pointer;
+            font-size: 18px; font-weight: bold; cursor: pointer;
             box-shadow: 0 4px 15px rgba(255,154,158,0.4);
             -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
         }
         .start-btn:active { transform: scale(0.95); }
-
-        /* --- 气泡样式 --- */
-        #bubble-container {
-            position: absolute; inset: 0;
-            z-index: 5; pointer-events: none;
-        }
+        /* --- 气泡 & 烟花 & 音乐按钮 (样式不变) --- */
+        #bubble-container { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
         .bubble {
             position: absolute;
-            background: rgba(255, 255, 255, 0.7);
+            background: rgba(255,255,255,0.7);
             backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
-            border-radius: 20px;
-            padding: 8px 16px;
-            color: #d66d7e; font-size: 14px;
-            white-space: nowrap;
+            border-radius: 20px; padding: 8px 16px;
+            color: #d66d7e; font-size: 14px; white-space: nowrap;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             opacity: 0; transform: translateY(20px) scale(0.8);
             transition: opacity 1s ease, transform 1s ease;
         }
         .bubble.show { opacity: 1; transform: translateY(0) scale(1); }
-
-        /* --- 烟花画布 --- */
-        #fireworks-canvas {
-            position: absolute; inset: 0;
-            z-index: 10; pointer-events: none;
-        }
-
-        /* --- 音乐按钮 --- */
+        #fireworks-canvas { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
         .music-btn {
             position: absolute; top: 20px; right: 20px;
-            width: 36px; height: 36px;
-            z-index: 100; opacity: 0; pointer-events: none;
-            transition: opacity 0.5s;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
+            width: 36px; height: 36px; z-index: 100;
+            opacity: 0; pointer-events: none; transition: opacity 0.5s; cursor: pointer;
         }
         .music-btn.active { opacity: 0.8; pointer-events: auto; }
-        .music-btn svg { 
-            fill: #d66d7e; width: 100%; height: 100%;
-            animation: spin 3s linear infinite paused; 
-        }
+        .music-btn svg { fill: #d66d7e; width: 100%; height: 100%; animation: spin 3s linear infinite paused; }
         .music-btn.playing svg { animation-play-state: running; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+    <!-- ✅ Safari 触摸补丁：强制唤醒事件链 -->
+    <script>document.body.addEventListener('touchstart', function(){}, {passive:true});</script>
 
-    <!-- 开场界面 -->
     <div id="start-screen">
         <div class="start-title">利利点开你的专属惊喜 ✨</div>
         <button class="start-btn" id="startBtn">开启旅程</button>
     </div>
-
-    <!-- 气泡容器 -->
     <div id="bubble-container"></div>
-
-    <!-- 烟花层 -->
     <canvas id="fireworks-canvas"></canvas>
-
-    <!-- 音乐 -->
     <div class="music-btn" id="musicBtn">
         <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
     </div>
-    <audio id="bgm" loop preload="auto">
-        <source src="./mailien.mp3" type="audio/mpeg">
-    </audio>
+    <!-- ✅ 注意：这里故意不放 src，由 JS 动态赋值，绕过 Safari 预检 -->
+    <audio id="bgm" loop preload="none"></audio>
+
 <script>
-    // ================= 配置区 =================
     const messages = [
         "你是我的小确幸 💜", "世界很大，我的眼里只有你 👀", 
         "记得按时吃饭呀 🍱", "利利，我想你了 💕", 
@@ -127,164 +93,121 @@
         "你是我最喜欢的宝贝 🧸",
         "晚安，好梦 🌙",
         "无论发生什么，我都在 🛡",
-        "喜欢你笑的样子 😊"，
-        "爱你三千遍 ❤"，
+        "喜欢你笑的样子 😊",
+        "爱你三千遍 ❤",
         "期待和利利见面 ✨"
     ];
-    // =========================================
+
+    // ✅ GitHub Pages 必须用 https 协议相对路径或绝对 https
+    const MUSIC_URL = './mailien.mp3';
 
     const container = document.getElementById('bubble-container');
     const startScreen = document.getElementById('start-screen');
     const musicBtn = document.getElementById('musicBtn');
     const bgm = document.getElementById('bgm');
     let isPlaying = false;
-    let hasStarted = false; // 防止重复触发
+    let hasStarted = false;
 
-    // ✅ 核心修复：界面切换与音频播放完全解耦
-    function startJourney() {
+    // ✅ 核心：动态设置音频源 + 超时保护
+    function safePlayAudio() {
+        return new Promise((resolve) => {
+            bgm.src = MUSIC_URL;
+            bgm.load();
+            const playPromise = bgm.play();
+            
+            // 300ms 超时保护：Safari 如果卡住，直接放弃
+            const timeout = setTimeout(() => resolve(false), 300);
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    clearTimeout(timeout);
+                    resolve(true);
+                }).catch(() => {
+                    clearTimeout(timeout);
+                    resolve(false);
+                });
+            }
+        });
+    }
+
+    async function startJourney() {
         if (hasStarted) return;
         hasStarted = true;
 
-        // 1. 立即切换界面（不依赖音频状态）
+        // ✅ 第一步：立即切换界面（绝不等待音频）
         startScreen.classList.add('hidden');
         musicBtn.classList.add('active');
-
-        // 2. 尝试播放音乐（失败也不影响任何功能）
-        try {
-            bgm.play().then(() => {
-                isPlaying = true;
-                musicBtn.classList.add('playing');
-            }).catch(() => {
-                console.log('移动端自动播放被拦截，需手动点击音乐图标');
-            });
-        } catch(e) { /* 静默处理所有异常 */ }
-
-        // 3. 启动气泡
         startBubbles();
-
-        // 4. 4分钟后启动烟花
         setTimeout(startFireworksShow, 4 * 60 * 1000);
+
+        // ✅ 第二步：异步尝试播放音乐，失败也不影响任何功能
+        const played = await safePlayAudio();
+        if (played) {
+            isPlaying = true;
+            musicBtn.classList.add('playing');
+        } else {
+            console.log('Safari 拦截了自动播放，用户可手动点击音乐图标');
+        }
     }
 
-    // ✅ 双重事件绑定，兼容所有移动端浏览器
+    // 双重事件绑定
     const startBtn = document.getElementById('startBtn');
     startBtn.addEventListener('click', startJourney);
-    startBtn.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        startJourney();
-    });
+    startBtn.addEventListener('touchend', (e) => { e.preventDefault(); startJourney(); });
 
-    // 音乐按钮控制
-    function toggleMusic() {
+    // 音乐手动控制
+    async function toggleMusic() {
         if (isPlaying) {
             bgm.pause();
             musicBtn.classList.remove('playing');
+            isPlaying = false;
         } else {
-            bgm.play().catch(() => {});
-            musicBtn.classList.add('playing');
+            if (!bgm.src) bgm.src = MUSIC_URL;
+            try {
+                await bgm.play();
+                musicBtn.classList.add('playing');
+                isPlaying = true;
+            } catch(e) { console.log('手动播放也被拦截'); }
         }
-        isPlaying = !isPlaying;
     }
     musicBtn.addEventListener('click', toggleMusic);
-    musicBtn.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        toggleMusic();
-    });
+    musicBtn.addEventListener('touchend', (e) => { e.preventDefault(); toggleMusic(); });
 
-    // 气泡生成（铺满不消失 + 移动端性能保护）
+    // 气泡生成
     function startBubbles() {
-        for (let i = 0; i < 12; i++) {
-            setTimeout(() => createBubble(), i * 120);
-        }
+        for (let i = 0; i < 12; i++) setTimeout(createBubble, i * 120);
         setInterval(createBubble, 1500);
     }
-
     function createBubble() {
         const b = document.createElement('div');
         b.className = 'bubble';
         b.innerText = messages[Math.floor(Math.random() * messages.length)];
-
-        const x = Math.random() * 85 + 5;
-        const y = Math.random() * 85 + 5;
-        b.style.left = x + '%';
-        b.style.top = y + '%';
-
+        b.style.left = (Math.random() * 85 + 5) + '%';
+        b.style.top = (Math.random() * 85 + 5) + '%';
         const colors = ['#ff9a9e','#fad0c4','#a18cd1','#fbc2eb','#8fd3f4'];
         b.style.border = `1px solid ${colors[Math.floor(Math.random()*colors.length)]}`;
-
         container.appendChild(b);
         requestAnimationFrame(() => b.classList.add('show'));
-
-        // ✅ 移动端内存保护：上限50个
-        while (container.children.length > 50) {
-            container.removeChild(container.firstElementChild);
-        }
+        while (container.children.length > 50) container.removeChild(container.firstElementChild);
     }
 
-    // 烟花引擎
+    // 烟花引擎（保持不变）
     function startFireworksShow() {
         const canvas = document.getElementById('fireworks-canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        let particles = [];
-        let active = true;
-
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let particles = [], active = true;
         class P {
-            constructor(x, y, color) {
-                this.x = x; this.y = y; this.color = color;
-                const a = Math.random() * Math.PI * 2;
-                const s = Math.random() * 5 + 2;
-                this.vx = Math.cos(a) * s;
-                this.vy = Math.sin(a) * s;
-                this.alpha = 1;
-                this.decay = Math.random() * 0.015 + 0.008;
-            }
-            update() {
-                this.x += this.vx; this.y += this.vy;
-                this.vy += 0.04;
-                this.alpha -= this.decay;
-            }
-            draw() {
-                ctx.globalAlpha = this.alpha;
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 2.5, 0, Math.PI*2);
-                ctx.fill();
-            }
+            constructor(x,y,c){this.x=x;this.y=y;this.color=c;const a=Math.random()*Math.PI*2,s=Math.random()*5+2;this.vx=Math.cos(a)*s;this.vy=Math.sin(a)*s;this.alpha=1;this.decay=Math.random()*0.015+0.008;}
+            update(){this.x+=this.vx;this.y+=this.vy;this.vy+=0.04;this.alpha-=this.decay;}
+            draw(){ctx.globalAlpha=this.alpha;ctx.fillStyle=this.color;ctx.beginPath();ctx.arc(this.x,this.y,2.5,0,Math.PI*2);ctx.fill();}
         }
-
-        function explode() {
-            const x = Math.random() * canvas.width;
-            const y = Math.random() * canvas.height * 0.6;
-            const hue = Math.random() * 360;
-            for (let i = 0; i < 50; i++) {
-                particles.push(new P(x, y, `hsl(${hue},100%,60%)`));
-            }
-        }
-
-        function loop() {
-            if (!active && particles.length === 0) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (active && Math.random() < 0.12) explode();
-            for (let i = particles.length-1; i >= 0; i--) {
-                particles[i].update();
-                particles[i].draw();
-                if (particles[i].alpha <= 0) particles.splice(i, 1);
-            }
-            requestAnimationFrame(loop);
-        }
-
+        function explode(){const x=Math.random()*canvas.width,y=Math.random()*canvas.height*0.6,h=Math.random()*360;for(let i=0;i<50;i++)particles.push(new P(x,y,`hsl(${h},100%,60%)`));}
+        function loop(){if(!active&&particles.length===0)return;ctx.clearRect(0,0,canvas.width,canvas.height);if(active&&Math.random()<0.12)explode();for(let i=particles.length-1;i>=0;i--){particles[i].update();particles[i].draw();if(particles[i].alpha<=0)particles.splice(i,1);}requestAnimationFrame(loop);}
         loop();
-        setTimeout(() => { active = false; }, 48000);
+        setTimeout(()=>{active=false;},48000);
     }
-
-    window.addEventListener('resize', () => {
-        const c = document.getElementById('fireworks-canvas');
-        c.width = window.innerWidth;
-        c.height = window.innerHeight;
-    });
+    window.addEventListener('resize',()=>{const c=document.getElementById('fireworks-canvas');c.width=window.innerWidth;c.height=window.innerHeight;});
 </script>
 </body>
 </html>
