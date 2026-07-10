@@ -1,137 +1,106 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>💌 To 利利</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 50%, #e8f0fe 100%);
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
-            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-            position: relative;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .warn-tip {
-            position: absolute;
-            padding: 10px 18px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 50px;
-            background: rgba(255, 255, 255, 0.65);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 4px 20px rgba(255, 182, 193, 0.25);
-            font-size: 14px;
-            color: #5a4a5a;
-            font-weight: 500;
-            opacity: 0;
-            transform: scale(0.8);
-            animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-            pointer-events: none;
-            z-index: 10;
-            white-space: nowrap;
-            letter-spacing: 0.5px;
-        }
-        @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.5) translateY(10px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        @keyframes fadeOut {
-            to { opacity: 0; transform: scale(1.1) translateY(-10px); }
-        }
-        #overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255, 255, 255, 0.98);
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: opacity 0.8s ease, visibility 0.8s;
-        }
-        #overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        .gift-icon { font-size: 5rem; animation: bounce 2s infinite ease-in-out; margin-bottom: 24px; filter: drop-shadow(0 10px 15px rgba(255,107,107,0.3)); }
-        .open-text { 
-            font-size: 1.2rem; 
-            color: #666; 
-            letter-spacing: 3px; 
-            animation: textPulse 3s infinite;
-        }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-15px) scale(1.05); }
-        }
-        @keyframes textPulse {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 1; }
-        }
-        #music-btn {
-            position: fixed;
-            top: 20px; right: 20px;
-            z-index: 50;
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.9);
-            font-size: 20px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        #music-btn:active { transform: scale(0.9); }
-        #music-btn.playing { animation: spin 4s linear infinite; background: rgba(255,255,255,0.9); }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .click-heart {
-            position: fixed;
-            pointer-events: none;
-            font-size: 24px;
-            z-index: 99;
-            animation: heartFloat 1s ease-out forwards;
-        }
-        @keyframes heartFloat {
-            0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
-            50% { transform: translate(-50%, -100%) scale(1.2); }
-            100% { opacity: 0; transform: translate(-50%, -150%) scale(1); }
-        }
-        .confession {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(0.8);
-            z-index: 20;
-            text-align: center;
-            opacity: 0;
-            pointer-events: none;
-            animation: confessionShow 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-            text-shadow: 0 2px 10px rgba(255,182,193,0.4);
-        }
-        .confession h1 {
-            font-size: 2rem;
-            color: #d63384;
-            margin-bottom: 12px;
-            letter-spacing: 2px;
-        }
-        .confession p {
-            font-size: 1.4rem;
-            color: #e85d75;
-            letter-spacing: 1px;
-        }
-        @keyframes confessionShow {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>💌 To 利利</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 50%, #e8f0fe 100%);
+        overflow: hidden; /* 保持隐藏滚动条，让气泡浮在内部 */
+        height: 100vh;
+        width: 100vw;
+        font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        position: relative;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .warn-tip {
+        position: absolute;
+        padding: 10px 18px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50px;
+        background: rgba(255, 255, 255, 0.85); /* 稍微加深背景以便看清文字 */
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 4px 20px rgba(255, 182, 193, 0.25);
+        font-size: 14px;
+        color: #5a4a5a;
+        font-weight: 500;
+        opacity: 0;
+        transform: scale(0.8);
+        animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        pointer-events: none; /* 允许点击穿透 */
+        z-index: 10;
+        white-space: nowrap;
+        letter-spacing: 0.5px;
+        /* 移除了 fadeOut 动画，现在它们不会消失 */
+    }
+    @keyframes popIn {
+        0% { opacity: 0; transform: scale(0.5) translateY(10px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    
+    #overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(255, 255, 255, 0.98);
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: opacity 0.8s ease, visibility 0.8s;
+    }
+    #overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    
+    .gift-icon { font-size: 5rem; animation: bounce 2s infinite ease-in-out; margin-bottom: 24px; filter: drop-shadow(0 10px 15px rgba(255,107,107,0.3)); }
+    .open-text { font-size: 1.2rem; color: #666; letter-spacing: 3px; animation: textPulse 3s infinite; }
+    
+    @keyframes bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-15px) scale(1.05); } }
+    @keyframes textPulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+
+    #music-btn {
+        position: fixed; top: 20px; right: 20px; z-index: 50;
+        width: 44px; height: 44px; border-radius: 50%;
+        background: rgba(255,255,255,0.7); backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.9);
+        font-size: 20px; display: none; align-items: center; justify-content: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    #music-btn:active { transform: scale(0.9); }
+    #music-btn.playing { animation: spin 4s linear infinite; background: rgba(255,255,255,0.9); }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    .click-heart {
+        position: fixed; pointer-events: none; font-size: 24px; z-index: 99;
+        animation: heartFloat 1s ease-out forwards;
+    }
+    @keyframes heartFloat {
+        0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+        50% { transform: translate(-50%, -100%) scale(1.2); }
+        100% { opacity: 0; transform: translate(-50%, -150%) scale(1); }
+    }
+
+    .confession {
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+        z-index: 20; text-align: center; opacity: 0; pointer-events: none;
+        animation: confessionShow 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        text-shadow: 0 2px 10px rgba(255,182,193,0.4);
+        background: rgba(255,255,255,0.9); padding: 30px; border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .confession h1 { font-size: 2rem; color: #d63384; margin-bottom: 12px; letter-spacing: 2px; }
+    .confession p { font-size: 1.4rem; color: #e85d75; letter-spacing: 1px; }
+    @keyframes confessionShow {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+</style>
 </head>
 <body>
     <div id="overlay">
@@ -140,134 +109,125 @@
     </div>
 
     <audio id="bgm" loop preload="auto">
-        <source src="./mailien.mp3" type="audio/mpeg">
+        <source src="YOUR_MUSIC_URL_HERE.mp3" type="audio/mpeg">
     </audio>
-    
     <button id="music-btn">🎵</button>
 
-    <script>
-        const tips = [
-            "利利，我想你了 💕", 
-            "利利每天都要开心哦！🌸", 
-            "期待和利利见面 ✨", 
-            "祝利利工作顺利呀 🍀", 
-            "利利要早点休息哦 🌙", 
-            "以后我来照顾你 🧣", 
-            "利利今天也要加油鸭 💪",
-            "麦莉恩这首歌送给利利 🎶",
-            "利利是最特别的存在 🌟",
-            "世界很大，我的眼里只有你 👀",
-            "记得按时吃饭呀 🍱",
-            "你是我的小确幸 🍬"
-        ];
+<script>
+    const tips = [
+        "利利，我想你了 💕", "利利今天过得开心吗？🌸", "期待和利利见面 ✨",
+        "祝利利工作顺利呀 🍀", "利利要早点休息哦 🌙", "天冷了，利利多穿衣服 🧣",
+        "利利今天也要加油鸭 💪", "麦莉恩这首歌送给利利 🎶", "利利是最特别的存在 🌟",
+        "世界很大，我的眼里只有你 👀", "记得按时吃饭呀 🍱", "你是我的小确幸 🍬",
+        "爱你三千遍 ❤️", "想带你去吃好吃的 🍔", "想和你一起看海 🌊",
+        "你是最棒的 🏆", "每天都要笑口常开 😊", "不管发生什么我都在 🛡️"
+    ];
+
+    // 修改点1：移除了数量限制，现在可以无限生成
+    let isRunning = false;
+    let activeTips = []; // 依然保留数组以便管理（虽然不再删除）
+    let timer = null;
+    let confessionShown = false;
+
+    function showTip() {
+        if (!isRunning) return;
+
+        const tip = document.createElement('div');
+        tip.className = 'warn-tip';
+        tip.innerText = tips[Math.floor(Math.random() * tips.length)];
+
+        // 修改点2：优化位置算法，尽量铺满全屏
+        // 减去元素自身宽高的估算值，防止超出屏幕
+        const maxX = window.innerWidth - 120; 
+        const maxY = window.innerHeight - 50;
         
-        const MAX_TIPS = 20;
-        const CREATE_INTERVAL = 600;
-        let isRunning = false;
-        let activeTips = [];
-        let timer = null;
-        let confessionShown = false;
+        tip.style.left = Math.max(10, Math.floor(Math.random() * maxX)) + 'px';
+        tip.style.top = Math.max(10, Math.floor(Math.random() * maxY)) + 'px';
 
-        function showTip() {
-            if (!isRunning || activeTips.length >= MAX_TIPS) return;
-            const tip = document.createElement('div');
-            tip.className = 'warn-tip';
-            tip.innerText = tips[Math.floor(Math.random() * tips.length)];
-            const maxX = window.innerWidth - 180;
-            const maxY = window.innerHeight - 60;
-            tip.style.left = Math.max(10, Math.floor(Math.random() * maxX)) + 'px';
-            tip.style.top = Math.max(10, Math.floor(Math.random() * maxY)) + 'px';
-            document.body.appendChild(tip);
-            activeTips.push(tip);
-            setTimeout(() => {
-                if(tip.parentNode) {
-                    tip.style.animation = 'fadeOut 0.6s ease forwards';
-                    setTimeout(() => {
-                        if(tip.parentNode) tip.remove();
-                        activeTips = activeTips.filter(t => t !== tip);
-                    }, 600);
-                }
-            }, 3500);
-        }
+        document.body.appendChild(tip);
+        activeTips.push(tip);
 
-        function showConfession() {
-            if (confessionShown) return;
-            confessionShown = true;
-            clearInterval(timer);
-            activeTips.forEach(tip => {
-                if(tip.parentNode) tip.remove();
-            });
-            activeTips = [];
-            
-            const confession = document.createElement('div');
-            confession.className = 'confession';
-            confession.innerHTML = '<h1>利利我喜欢你</h1><p>做我女朋友吧 💖</p>';
-            document.body.appendChild(confession);
-        }
+        // 修改点3：移除了自动消失的 setTimeout 逻辑
+        // 气泡现在会一直存在，直到内存撑爆或者手动刷新
+    }
 
-        const overlay = document.getElementById('overlay');
-        const bgm = document.getElementById('bgm');
-        const musicBtn = document.getElementById('music-btn');
+    function showConfession() {
+        if (confessionShown) return;
+        confessionShown = true;
+        clearInterval(timer); // 停止生成新气泡，防止遮挡表白文字
+        
+        const confession = document.createElement('div');
+        confession.className = 'confession';
+        confession.innerHTML = '<h1>利利我喜欢你</h1><p>做我女朋友吧 💖</p>';
+        document.body.appendChild(confession);
+    }
 
-        overlay.addEventListener('click', () => {
-            overlay.classList.add('hidden');
-            isRunning = true;
-            musicBtn.style.display = 'flex';
-            const playPromise = bgm.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    musicBtn.classList.add('playing');
-                }).catch(e => {
-                    console.warn('自动播放被拦截:', e);
-                    musicBtn.innerText = '🔇';
-                });
-            }
-            timer = setInterval(showTip, CREATE_INTERVAL);
-            setTimeout(showConfession, 8000);
-            
-            const docEl = document.documentElement;
-            if (docEl.requestFullscreen) docEl.requestFullscreen().catch(()=>{});
-            else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
-        });
+    const overlay = document.getElementById('overlay');
+    const bgm = document.getElementById('bgm');
+    const musicBtn = document.getElementById('music-btn');
 
-        musicBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            if (bgm.paused) {
-                bgm.play();
+    overlay.addEventListener('click', () => {
+        overlay.classList.add('hidden');
+        isRunning = true;
+        musicBtn.style.display = 'flex';
+        
+        const playPromise = bgm.play();
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
                 musicBtn.classList.add('playing');
-                musicBtn.innerText = '🎵';
-            } else {
-                bgm.pause();
-                musicBtn.classList.remove('playing');
+            }).catch(e => {
+                console.warn('自动播放被拦截:', e);
                 musicBtn.innerText = '🔇';
-            }
-        });
-
-        let lastTap = 0;
-        document.addEventListener('touchend', (e) => {
-            const currentTime = new Date().getTime();
-            const tapLength = currentTime - lastTap;
-            if (tapLength < 300 && tapLength > 0) {
-                createHeart(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-                e.preventDefault();
-            }
-            lastTap = currentTime;
-        });
-        
-        document.addEventListener('dblclick', (e) => {
-            createHeart(e.clientX, e.clientY);
-        });
-
-        function createHeart(x, y) {
-            const heart = document.createElement('div');
-            heart.className = 'click-heart';
-            heart.innerText = ['❤️','💖','💗','💕'][Math.floor(Math.random()*4)];
-            heart.style.left = x + 'px';
-            heart.style.top = y + 'px';
-            document.body.appendChild(heart);
-            setTimeout(() => heart.remove(), 1000);
+            });
         }
-    </script>
+
+        // 修改点4：加快生成速度，更快铺满屏幕 (从600ms改为300ms)
+        timer = setInterval(showTip, 300); 
+        
+        // 延迟表白出现的时间，给气泡一点时间铺满 (从8s改为12s)
+        setTimeout(showConfession, 12000); 
+
+        const docEl = document.documentElement;
+        if (docEl.requestFullscreen) docEl.requestFullscreen().catch(()=>{});
+        else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+    });
+
+    musicBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); e.preventDefault();
+        if (bgm.paused) {
+            bgm.play();
+            musicBtn.classList.add('playing');
+            musicBtn.innerText = '🎵';
+        } else {
+            bgm.pause();
+            musicBtn.classList.remove('playing');
+            musicBtn.innerText = '🔇';
+        }
+    });
+
+    let lastTap = 0;
+    document.addEventListener('touchend', (e) => {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        if (tapLength < 300 && tapLength > 0) {
+            createHeart(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+            e.preventDefault();
+        }
+        lastTap = currentTime;
+    });
+    document.addEventListener('dblclick', (e) => {
+        createHeart(e.clientX, e.clientY);
+    });
+
+    function createHeart(x, y) {
+        const heart = document.createElement('div');
+        heart.className = 'click-heart';
+        heart.innerText = ['❤️','💖','💗','💕'][Math.floor(Math.random()*4)];
+        heart.style.left = x + 'px';
+        heart.style.top = y + 'px';
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 1000);
+    }
+</script>
 </body>
 </html>
