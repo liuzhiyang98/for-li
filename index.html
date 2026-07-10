@@ -5,146 +5,318 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>💌 To 利利</title>
     <style>
-        /* 这里是样式表，负责长什么样 */
+        /* --- 基础样式 --- */
         body {
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 100%); /* 粉色背景 */
+            background: linear-gradient(135deg, #fff0f3 0%, #ffdee9 100%);
             height: 100vh;
             width: 100vw;
-            overflow: hidden; /* 禁止滚动 */
+            overflow: hidden;
             font-family: "Microsoft YaHei", sans-serif;
             position: relative;
+            user-select: none;
         }
 
-        /* 音乐按钮样式 */
+        /* --- 右上角音乐按钮 --- */
         .music-btn {
             position: absolute;
             top: 20px;
             right: 20px;
             width: 40px;
             height: 40px;
-            background: white;
+            background: rgba(255, 255, 255, 0.8);
             border-radius: 50%;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             display: flex;
-            justify-content: center;
             align-items: center;
-            font-size: 20px;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             z-index: 100;
             cursor: pointer;
-            animation: spin 4s linear infinite; /* 旋转动画 */
+            transition: transform 0.3s;
+        }
+        .music-btn.playing { animation: spin 3s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- 开场引导层 --- */
+        #start-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 240, 243, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            transition: opacity 1s;
+        }
+        #start-screen h1 {
+            color: #ff6b81;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        #start-btn {
+            padding: 12px 30px;
+            background: #ff6b81;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            box-shadow: 0 4px 15px rgba(255, 107, 129, 0.4);
+            cursor: pointer;
         }
 
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        /* 气泡样式 */
+        /* --- 聊天气泡 --- */
         .bubble {
             position: absolute;
-            background: rgba(255, 255, 255, 0.85);
-            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 18px;
             border-radius: 20px;
             color: #555;
             font-size: 14px;
-            box-shadow: 0 4px 15px rgba(255, 182, 193, 0.3);
-            opacity: 0; /* 初始不可见 */
-            transition: opacity 1s ease; /* 慢慢浮现 */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            opacity: 0;
+            transform: translateY(20px) scale(0.9);
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             max-width: 80%;
             word-wrap: break-word;
-            border: 1px solid rgba(255, 255, 255, 0.9);
+            z-index: 10;
+        }
+        .bubble.show { opacity: 1; transform: translateY(0) scale(1); }
+
+        /* --- 烟花画布 --- */
+        #fireworks-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; /* 让点击穿透画布 */
+            z-index: 20;
         }
     </style>
 </head>
 <body>
 
-    <!-- 音乐按钮 -->
-    <div class="music-btn" id="musicBtn">🎵</div>
-    
-    <!-- 这里的 src 可以换成你喜欢的音乐链接 -->
+    <!-- 音乐控件 -->
     <audio id="bgm" loop preload="auto">
         <source src="./mailien.mp3" type="audio/mpeg">
-    </audio>
+</audio>
+    <!-- 开场引导 -->
+    <div id="start-screen">
+        <h1>利利 点开你的专属惊喜 ✨</h1>
+        <button id="start-btn">开启旅程</button>
+    </div>
 
-    <script>
-        // --- 核心逻辑区域 ---
+    <!-- 烟花画布 -->
+    <canvas id="fireworks-canvas"></canvas>
+
+<script>
+    // --- 配置区 ---
+    const messages = [
+        "你是我的小确幸 💜", "世界很大，我的眼里只有你 👀", 
+        "记得按时吃饭呀 🍱", "利利，我想你了 💕", 
+        "利利是最特别的存在 🌟", "想和你一起看日落 🌅",
+        "每天都要开心哦 😊", "遇见你真好 ❤️" ,
+        "麦莉恩这首歌送给利利 🎶",
+        "利利是最特别的存在 🌟",
+        "想和你一起看星星 ✨",
+        "你是我最喜欢的宝贝 🧸",
+        "晚安，好梦 🌙",
+        "无论发生什么，我都在 🛡",
+        "喜欢你笑的样子 😊"
+        "爱你三千遍 ❤"
+        "不管发生什么我都在 🛡"
+        "世界很大，我的眼里只有你 👀"
+        "期待和利利见面 ✨
+    ];
+    
+    // 核心变量
+    let bubbleInterval;
+    let fireworksTimer;
+    const startScreen = document.getElementById('start-screen');
+    const musicBtn = document.getElementById('musicBtn');
+    const bgm = document.getElementById('bgm');
+    const canvas = document.getElementById('fireworks-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 调整画布大小
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // --- 1. 气泡逻辑 ---
+    function createBubble() {
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        b.innerText = messages[Math.floor(Math.random() * messages.length)];
         
-        // 1. 你想说的话（可以在这里添加更多）
-        const messages = [
-            "你是我的小确幸 🍬",
-            "世界很大，我的眼里只有你 👀",
-            "记得按时吃饭呀 🍱",
-            "利利，我想你了 💕",
-            "麦莉恩这首歌送给利利 🎶",
-            "利利是最特别的存在 ✨",
-            "每天都要开心哦 🌞",
-            "想和你一起看星星 🌟"
-        ];
+        // 随机位置 (避开边缘)
+        const x = Math.random() * 80 + 10; 
+        const y = Math.random() * 80 + 10;
+        b.style.left = x + '%';
+        b.style.top = y + '%';
+        
+        // 随机颜色边框
+        const colors = ['#ff9a9e', '#fad0c4', '#a18cd1', '#fbc2eb'];
+        b.style.borderLeft = `4px solid ${colors[Math.floor(Math.random() * colors.length)]}`;
 
-        // 生成气泡的函数
-        function createBubble() {
-            const bubble = document.createElement('div');
-            bubble.className = 'bubble';
-            
-            // 随机选一句话
-            const text = messages[Math.floor(Math.random() * messages.length)];
-            bubble.innerText = text;
-            
-            // 随机位置 (0% - 90%)
-            const x = Math.random() * 90;
-            const y = Math.random() * 90;
-            bubble.style.left = x + '%';
-            bubble.style.top = y + '%';
-            
-            // 随机大小 (稍微有点变化)
-            const scale = 0.8 + Math.random() * 0.4;
-            bubble.style.transform = `scale(${scale})`;
-            
-            // 随机边框颜色
-            const colors = ["#ff9a9e", "#fad0c4", "#a18cd1", "#fbc2eb"];
-            bubble.style.border = `1px solid ${colors[Math.floor(Math.random() * colors.length)]}`;
+        document.body.appendChild(b);
+        
+        // 强制重绘以触发transition
+        setTimeout(() => b.classList.add('show'), 50);
+    }
 
-            document.body.appendChild(bubble);
+    // --- 2. 烟花引擎 (增强版) ---
+    let particles = [];
+    
+    class Particle {
+        constructor(x, y, color, type) {
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            this.type = type; // 0:圆, 1:心, 2:环, 3:散射
             
-            // 让它慢慢显示出来
-            setTimeout(() => {
-                bubble.style.opacity = '1';
-            }, 100);
+            // 根据类型计算速度
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 4 + 1;
+            
+            if (type === 1) { // 爱心形状算法
+                const t = Math.random() * Math.PI * 2;
+                // 爱心参数方程
+                const hx = 16 * Math.pow(Math.sin(t), 3);
+                const hy = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+                this.vx = hx * 0.15; 
+                this.vy = hy * 0.15;
+            } else if (type === 2) { // 环形
+                 this.vx = Math.cos(angle) * 3;
+                 this.vy = Math.sin(angle) * 3;
+            } else { // 普通圆形或散射
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+            }
+
+            this.alpha = 1;
+            this.decay = Math.random() * 0.015 + 0.005; // 消失速度
+            this.gravity = 0.05; // 重力
         }
 
-        // 2. 启动循环：每 800 毫秒生成一个，铺满屏幕
-        setInterval(createBubble, 800);
-
-        // 3. 音乐控制逻辑
-        let isPlaying = false;
-        const audio = document.getElementById('bgm');
-        const btn = document.getElementById('musicBtn');
-
-        function toggleMusic() {
-            if (isPlaying) {
-                audio.pause();
-                btn.style.animationPlayState = 'paused'; // 停止旋转
-                btn.innerHTML = '🔇'; // 变静音图标
-            } else {
-                audio.play().catch(e => alert("请点击屏幕交互后才能播放音乐哦"));
-                btn.style.animationPlayState = 'running'; // 开始旋转
-                btn.innerHTML = '🎵'; // 变音乐图标
-            }
-            isPlaying = !isPlaying;
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.vy += this.gravity; // 施加重力
+            this.alpha -= this.decay;
         }
 
-        // 点击按钮切换音乐
-        btn.addEventListener('click', toggleMusic);
-        
-        // 也可以点击屏幕任意位置尝试播放（解决浏览器自动播放限制）
-        document.body.addEventListener('click', function() {
-            if (!isPlaying) {
-                toggleMusic();
-            }
-        });
+        draw() {
+            ctx.globalAlpha = this.alpha;
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+    }
 
-    </script>
+    function launchFirework() {
+        // 随机位置
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * (canvas.height / 2); // 在上半部分爆炸
+        
+        // 随机颜色
+        const hue = Math.random() * 360;
+        const color = `hsl(${hue}, 100%, 60%)`;
+        
+        // 随机类型 (0-3)
+        const type = Math.floor(Math.random() * 4);
+        
+        // 产生粒子
+        const count = type === 1 ? 60 : 40; // 爱心需要更多点
+        for(let i=0; i<count; i++) {
+            particles.push(new Particle(x, y, color, type));
+        }
+    }
+
+    function animateFireworks() {
+        // 制造拖尾效果：不完全清除画布，而是覆盖一层半透明背景
+        ctx.fillStyle = 'rgba(255, 240, 243, 0.2)'; 
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            particles[i].update();
+            particles[i].draw();
+            if (particles[i].alpha <= 0) {
+                particles.splice(i, 1);
+            }
+        }
+        
+        if (particles.length > 0 || fireworksTimer) {
+            requestAnimationFrame(animateFireworks);
+        }
+    }
+
+    // --- 3. 流程控制 ---
+    document.getElementById('start-btn').addEventListener('click', () => {
+        // 隐藏引导页
+        startScreen.style.opacity = 0;
+        setTimeout(() => startScreen.style.display = 'none', 1000);
+        
+        // 播放音乐
+        bgm.play().then(() => {
+            musicBtn.classList.add('playing');
+        }).catch(e => console.log("需交互才能播放"));
+
+        // 开始冒泡
+        createBubble(); // 立即来一个
+        bubbleInterval = setInterval(createBubble, 1500); // 每1.5秒一个
+
+        // 设定4分钟后的烟花秀
+        setTimeout(() => {
+            startFireworksShow();
+        }, 4 * 60 * 1000); // 4分钟 = 240000毫秒
+    });
+
+    // 音乐按钮切换
+    musicBtn.addEventListener('click', () => {
+        if (bgm.paused) {
+            bgm.play();
+            musicBtn.classList.add('playing');
+            musicBtn.innerText = '🎵';
+        } else {
+            bgm.pause();
+            musicBtn.classList.remove('playing');
+            musicBtn.innerText = '🔇';
+        }
+    });
+
+    // 启动烟花秀函数
+    function startFireworksShow() {
+        console.log("烟花秀开始！");
+        // 快速连续发射
+        fireworksTimer = setInterval(() => {
+            launchFirework();
+            // 偶尔一次发射两发
+            if(Math.random() > 0.7) launchFirework();
+        }, 300); // 每0.3秒发射一次
+
+        // 48秒后停止发射新烟花，但让现有的放完
+        setTimeout(() => {
+            clearInterval(fireworksTimer);
+            fireworksTimer = null;
+            // 可以在这里加一行字，比如“永远爱你”
+            const endText = document.createElement('div');
+            endText.innerText = "✨ 永远陪在你身边 ✨";
+            endText.style.cssText = "position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:30px; color:#ff6b81; font-weight:bold; text-shadow:0 0 10px white; z-index:30;";
+            document.body.appendChild(endText);
+        }, 48 * 1000);
+
+        // 启动动画循环
+        animateFireworks();
+    }
+
+</script>
 </body>
 </html>
